@@ -13,7 +13,11 @@ set -euo pipefail
 
 IMAGE="${BOX_IMAGE:-mcr.microsoft.com/playwright:v1.63.0-noble}"
 ROOTS=("${PROMO_REELS:-$HOME/promo-reels}" "${TMPDIR:-/tmp}" "/private/tmp/claude-$(id -u)" "/tmp/claude-$(id -u)")
-IFS=: read -r -a extra <<< "${BOX_ROOTS-}"; ROOTS+=(${extra[@]+"${extra[@]}"})
+# Split BOX_ROOTS on ":" without a here-string: bash needs a temp file for one, which a sandbox
+# can refuse.
+old_ifs=$IFS; IFS=:; set -f
+for r in ${BOX_ROOTS-}; do ROOTS+=("$r"); done
+set +f; IFS=$old_ifs
 sha() { if command -v shasum >/dev/null; then shasum; else sha1sum; fi; }
 
 die() { echo "box: $*" >&2; exit 2; }
