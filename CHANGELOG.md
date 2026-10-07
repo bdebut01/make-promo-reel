@@ -10,5 +10,11 @@ First public release.
   `snappy` motion.
 - Design sources (design systems, HTML/CSS, token JSON) and supplied media steer the look.
 - Synthesized UI sound kits and a curated Mixkit music library.
+- Capture hides chat widgets, banners and dev ribbons (`hide`, `hideTexts`).
+- Storyboard approval is recorded in `storyboard.md` and holds when the skill runs as a
+  subagent.
+- `npm run loudness` checks −14 LUFS and true peak; the contact sheet reports cut spacing in
+  beats; an optional parallel review covers readability, pacing and brand.
+- Reels ship with an asset and license table, and optional post copy.
 - `guard.sh` for destructive steps, `slim.sh` to shrink finished reels, and `box` to run
   Chromium in Docker where the host sandbox blocks it.

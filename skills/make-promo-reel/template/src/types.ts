@@ -96,4 +96,5 @@ export type CaptureManifest = {
   keys?: { t: number }[]; // one per typed character
 };
 
-export type PromoProps = PromoConfig & { manifests?: Record<string, CaptureManifest> };
+// Filled in by calculateMetadata: the clips' manifests, and the frame at the middle of each cut.
+export type PromoProps = PromoConfig & { manifests?: Record<string, CaptureManifest>; cuts?: number[] };

@@ -34,7 +34,10 @@ The capture and compositing are mechanical, and the bundled scripts handle most 
   zoom. The on-camera actions (`click`, `type`, `scrollBy`, `focus`, `hold`) move at a human
   pace.
 - `template/sheet.mjs`: renders a labeled contact sheet (one PNG of evenly spaced frames), so you
-  can look at the video without watching it.
+  can look at the video without watching it. It also prints pacing warnings and, with music,
+  how the cuts sit on the beat.
+- `template/loudness.mjs`: measures a rendered cut's loudness and true peak against the
+  -14 LUFS social target.
 - `scripts/avatars.mjs`: initials-on-gradient profile pictures for demo people.
 - `template/sfx.mjs`: synthesizes the UI sound kits (clicks, keys, whoosh, chime, pops) on
   `npm install`. Nothing to find or license.
@@ -73,6 +76,7 @@ where the user will look, and everything that made them is tucked into `work/`:
   sheets/                a contact sheet and the final promo.json for each cut
   work/                  the workspace (<ws> below), and PROMO_WS for the guard
     notes.md             how to run, log in and seed; lets a later re-cut skip recon
+    storyboard.md        the approved storyboard, with the approval line
     setup.sh             install, build, seed and start the app copy: the commands that worked
     app/                 isolated copy of the app, with its own database (removed at handover)
     design/              copies of a supplied design source and its tokens.json, and media/
@@ -189,6 +193,10 @@ Then ask the rest in **one round**, each with a default the user can just accept
    steer the look before it's built. If the user answers, read `references/design-sources.md`
    right away. If it's unclear whether a design is meant as the look or as the thing to film,
    ask that in the same round.
+
+The video renders with Remotion, which is free for individuals, non-profits and companies of
+up to 3 people; a larger company needs a Remotion Company License (remotion.pro/license). If
+the request looks like it's for a larger company, mention this once, in the same round.
 
 Don't ask what you can learn from the repo: product name, logo, colors, fonts, URL, what the
 features are. Question 5 offers a way to override those; it doesn't ask the user to supply
@@ -311,6 +319,14 @@ Ask the user to confirm or change, in particular:
 - **The length,** if it's well under the cap.
 - **Any must-have** you couldn't fit.
 
+Save the storyboard as `<ws>/storyboard.md`. When the user approves it, add a last line
+`Approved by the user: <date>, <what they changed>`, and don't capture until that line is
+there. **The gate holds even when you can't ask.** If you're running as a subagent, or were told
+not to ask questions, stop at this point and hand back the storyboard for approval rather than
+filming on your own judgment: a promo shows the user's product to the public, and filming
+takes most of the run. Only an explicit "go ahead without me" in the user's request skips it,
+and then say so in the README.
+
 This is the cheapest point to change direction: a caption rewrite costs nothing here, and a
 re-shoot costs minutes later. Check the timing adds up with the formula in
 `motion-language.md` before filming. If a moment depends on a feature behind a flag that's off by
@@ -364,6 +380,10 @@ run `npm run frames` once after the first capture, or a one-line Playwright scre
   mark. Events less than 1.6s apart (typing,
   the Send click, the payoff) count as one moment, and it's framed with one steady shot that
   fits them all.
+- **Hide what must never be on camera** with `openApp`'s `hide` (CSS selectors) and
+  `hideTexts` (strings): chat launchers, cookie banners, "staging" ribbons, feedback tabs,
+  dev-only buttons. They stay hidden as the page changes, so a widget that loads late never
+  flashes in. Prefer turning the thing off in the copy's settings when the app has one.
 - **Scroll the right box.** `scrollBy` wheels whatever is under the cursor. When a list scrolls
   inside its own container (a member list, a sidebar, a chat pane), move the cursor over that
   container first, or the page scrolls instead.
@@ -462,6 +482,13 @@ Write `studio/public/promo.json`. The example in the template and `src/types.ts`
     caption lead-in under 0.8s, a shot sped past 1.2×, or a cut longer than `maxSeconds` (set it
     to the user's cap). Fix each one before rendering; to
     find the time, cut a moment rather than squeezing the floors.
+- **A second pair of eyes,** when the session can start subagents: once the sheet looks right
+  to you, have three reviewers look at `out/sheet.png`, `promo.json` and the storyboard in
+  parallel, each for one thing: **readability** (caption size and contrast, nothing under
+  about 3% of the frame height, nothing in a platform's UI zones), **pacing** (can each
+  caption be read before the action, does every shot land one benefit), and **brand** (does it
+  look like this product, not the preset). Each returns a short list of fixes. Apply the ones
+  you agree with and re-run the sheet. Skip this for a quick re-cut.
 - **Sound:** set `"sfx": { "kit": "auto" }` to place synthesized UI sounds on the capture's own
   events: a click per click, a key per typed character, a whoosh on each cut, a chime on the
   payoff (the shot's last `d.focus`) and pops as the end-card bubbles land. `auto` picks the kit
@@ -482,11 +509,17 @@ Write `studio/public/promo.json`. The example in the template and `src/types.ts`
   sit at the same level under the effects, and a `startAt` that skips any quiet intro. Name the
   track on the storyboard's Look line so the user can swap it (`--track <id>`; `music.mjs list`
   shows all ten). For beat-matched cuts, make scene lengths whole multiples of the printed beat.
+  With a `bpm` in the music block, `npm run sheet` prints the spacing between cuts in beats;
+  nudge `trim` or `duration` until it reads whole numbers. It knows the tempo, not where the
+  downbeat falls, so listen to the first cut once.
   Record the track and its license in the reel's README. The license requires no attribution,
   but it's what makes the reel's music traceable.
 - **Render, then copy to the reel folder:**
   `npm run render -- out/<app>-reel-16x9.mp4`, then
-  `cp /abs/studio/out/<app>-reel-16x9.mp4 /abs/reel/`. In the box, Remotion uses the image's
+  `npm run loudness -- out/<app>-reel-16x9.mp4`, then
+  `cp /abs/studio/out/<app>-reel-16x9.mp4 /abs/reel/`. The loudness check wants about -14 LUFS
+  with true peak under -1 dBTP, which is where social platforms normalize. When it fails, it
+  prints a factor: scale `music.volume` and `sfx.volume` by it and render again. In the box, Remotion uses the image's
   Chromium (`remotion.config.ts` and `sheet.mjs` read `$CHROME`). For another aspect ratio,
   write `promo-9x16.json` with the new `width`/`height` (and mobile clips) and run
   `npm run render -- out/<app>-reel-9x16.mp4 --props=public/promo-9x16.json`.
@@ -505,6 +538,13 @@ Before handing over, make sure the reel folder reads on its own:
   what is demo data and which people were renamed or left out; the design source, if one was
   used, and which `brand` fields came from it; each supplied media file and where it was used;
   and how to re-cut (below)
+- an **Assets** table in the README: every font, logo, image, photo and music track that
+  appears in the video, with its source (the app's repo and path, supplied by the user, the
+  music library, generated) and license. A promo is published, and this table is what answers
+  "can we use this?" later.
+- optionally, when the use is a social post: `post.md` with a one-line post for each platform
+  in the app's voice, the URL, and alt text for the video. Ask first; some teams write their
+  own.
 
 Stop every server and container you started, then **slim the workspace**. The app copy and the
 installs are about 1 GB per reel and all rebuildable, so they shouldn't sit on disk:

@@ -9,6 +9,7 @@
     "sheet": "node sheet.mjs",
     "shots": "node shots.mjs",
     "frames": "node frames.mjs",
+    "loudness": "node loudness.mjs",
     "postinstall": "node sfx.mjs"
   },
   "dependencies": {

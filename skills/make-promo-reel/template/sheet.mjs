@@ -34,6 +34,19 @@ const total = composition.durationInFrames / composition.fps;
 const cap = composition.props.maxSeconds;
 if (cap && total > cap + 0.25) warnings.push(`the cut runs ${total.toFixed(1)}s, over the ${cap}s cap: cut a moment rather than speeding shots up`);
 for (const w of warnings) console.warn(`PACING WARNING  ${w}`);
+
+// Beat report: with a music bpm, how far apart the cuts are in beats. Whole numbers mean the
+// cuts keep the music's rhythm. Only the bpm is known, not where the downbeat falls, so this
+// checks spacing, not phase. Information, not a warning: beat-matching is optional.
+const bpm = composition.props.music?.bpm;
+const cuts = composition.props.cuts ?? [];
+if (bpm && cuts.length > 1) {
+  const beat = (60 / bpm) * composition.fps;
+  const gaps = cuts.slice(1).map((c, i) => (c - cuts[i]) / beat);
+  const off = gaps.map((g, i) => [i, g]).filter(([, g]) => Math.abs(g - Math.round(g)) > 0.15);
+  console.log(`beats  ${bpm} bpm (one beat ${(60 / bpm).toFixed(2)}s); cuts at ${cuts.map((c) => (c / composition.fps).toFixed(2) + "s").join(", ")}`);
+  console.log(`beats  spacing between cuts: ${gaps.map((g) => g.toFixed(2)).join(", ")} beats${off.length ? `; off the grid: ${off.map(([i, g]) => `cuts ${i + 1}–${i + 2} (${g.toFixed(2)}; nearest whole is ${Math.round(g)})`).join(", ")}` : "; all on the grid"}`);
+}
 const from = fromArg ?? 0;
 const to = Math.min(toArg ?? last, last);
 const frames = [...new Set(Array.from({ length: count }, (_, i) => Math.round(from + ((to - from) * i) / Math.max(1, count - 1))))];

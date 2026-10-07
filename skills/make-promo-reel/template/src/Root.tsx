@@ -1,7 +1,7 @@
 import React from "react";
 import { Composition, staticFile } from "remotion";
 import { Promo } from "./Promo";
-import { totalFrames } from "./timing";
+import { cutFrames, totalFrames } from "./timing";
 import type { CaptureManifest, PromoProps } from "./types";
 import config from "../public/promo.json";
 
@@ -22,6 +22,7 @@ export const Root: React.FC = () => (
         if (res.ok) manifests[clip] = await res.json();
       }
       const full = { ...props, manifests };
+      full.cuts = cutFrames(full);
       return { props: full, durationInFrames: totalFrames(full), width: props.width, height: props.height, fps: props.fps };
     }}
   />

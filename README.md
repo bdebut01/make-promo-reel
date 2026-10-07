@@ -21,8 +21,15 @@ prototype or mockup (an HTML file) when there's no app yet.
   recent timestamps. It also checks that no real teammates appear on screen.
 - **Sound**: UI sound effects synthesized on install, and a curated royalty-free music library
   (Mixkit Free License, no attribution required).
-- **A reel folder you can re-cut**: the MP4s, contact sheets, a README with the shot list, and
-  everything needed to change copy or timing in about a minute without re-filming.
+- **Checks before you see it**: a contact sheet with pacing warnings and a beat report, a
+  loudness check against the −14 LUFS social target, and optional parallel reviewers for
+  readability, pacing and brand.
+- **No surprises on camera**: chat widgets, cookie banners and "staging" ribbons are hidden
+  during capture, and nothing is filmed until you approve the storyboard. That gate holds even
+  when the skill runs as a subagent.
+- **A reel folder you can re-cut**: the MP4s, contact sheets, a README with the shot list and
+  an asset/license table, and everything needed to change copy or timing in about a minute
+  without re-filming.
 
 ## Install
 
@@ -117,13 +124,33 @@ The video is described by `promo.json` (schema: `template/src/types.ts`). It lis
 shots that point at captured clips with captions, trims and zoom, and an end card. The studio
 reads the capture's click log to draw the cursor and aim the zoom.
 
-## Music licensing
+## Licensing
 
-`library/music.json` lists tracks by URL only. Nothing is redistributed. Tracks are
+**This skill** is MIT-licensed.
+
+**Remotion**, which renders the video, has its own
+[license](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md). It's free for
+individuals, non-profits and for-profit companies with up to 3 employees. Larger companies
+need a [Remotion Company License](https://www.remotion.pro/license). The skill mentions this at
+intake when the request looks like it's for a larger company.
+
+**Music:** `library/music.json` lists tracks by URL only. Nothing is redistributed. Tracks are
 downloaded from Mixkit at use time under the
 [Mixkit Stock Music Free License](https://mixkit.co/license/#musicFree): free for commercial
 use, no attribution required, and the files may not be redistributed as-is. Each reel's README
 records which track it used.
+
+## Related projects
+
+- [remotion-dev/skills](https://github.com/remotion-dev/skills): Remotion's official skills for
+  writing Remotion code. A good companion when you customize the studio's components.
+- [digitalsamba/claude-code-video-toolkit](https://github.com/digitalsamba/claude-code-video-toolkit):
+  a broader video workspace (voiceover, AI music, explainers).
+- [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes): launch videos rendered
+  from HTML, built from a URL or brief rather than live recordings.
+
+This skill focuses on one thing those don't do: filming your real, running app in a safe
+isolated copy, with a believable demo world, and cutting it into a finished promo.
 
 ## Contributing
 

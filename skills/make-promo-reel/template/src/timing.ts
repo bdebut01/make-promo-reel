@@ -28,6 +28,20 @@ export function revealFrames(kind: string, tf: number): number {
   return kind === "slide" ? 0 : Math.round(tf / 2);
 }
 
+// The frame at the middle of each cut, where the eye reads the change. sheet.mjs uses these to
+// report how cuts sit on the music's beat.
+export function cutFrames(props: PromoProps): number[] {
+  const frames = sceneFrames(props);
+  const { frames: t } = transitionOf(props);
+  const cuts: number[] = [];
+  let start = 0;
+  for (let i = 1; i < frames.length; i++) {
+    start += frames[i - 1] - t;
+    cuts.push(start + Math.round(t / 2));
+  }
+  return cuts;
+}
+
 // Transitions overlap neighboring scenes, so they shorten the total.
 export function totalFrames(props: PromoProps): number {
   const frames = sceneFrames(props);

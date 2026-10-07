@@ -5,7 +5,8 @@
 // click is logged instead, and the studio draws the cursor, click pulses and auto-zoom.
 //
 //   import { openApp } from "./capture.mjs";   // copied into the studio folder
-//   const app = await openApp({ baseURL: "http://127.0.0.1:8123", outDir: "public/captures" });
+//   const app = await openApp({ baseURL: "http://127.0.0.1:8123", outDir: "public/captures",
+//     hide: ["#intercom-container", ".cookie-banner"], hideTexts: ["Staging"] });
 //   await app.page.goto("/items");                     // set up state off camera
 //   await app.record("browse", async (d) => {           // everything in here is on camera
 //     await d.hold(0.5);
@@ -40,6 +41,12 @@ export async function openApp({
   headless = true,
   quality = 92,
   blockAnalytics = true, // demo sessions shouldn't show up in the product's analytics
+  // Things that must never be on camera but that the app shows anyway: chat launchers, cookie
+  // banners, "staging" ribbons, dev-only buttons. CSS selectors go in `hide`; `hideTexts`
+  // hides the smallest element whose own text contains one of the strings (case-insensitive).
+  // Both keep hiding as the page changes, so a widget that loads late never flashes in.
+  hide = [],
+  hideTexts = [],
 } = {}) {
   fs.mkdirSync(outDir, { recursive: true });
   const browser = await chromium.launch({ headless });
@@ -69,6 +76,40 @@ export async function openApp({
     if (document.documentElement) add();
     else document.addEventListener("DOMContentLoaded", add);
   });
+
+  if (hide.length || hideTexts.length) {
+    await page.addInitScript(({ hide, hideTexts }) => {
+      const needles = hideTexts.map((t) => t.toLowerCase());
+      const css = hide.length ? `${hide.join(",")}{visibility:hidden!important;pointer-events:none!important}` : "";
+      const sweep = () => {
+        if (css && !document.getElementById("__promo_hide")) {
+          const s = document.createElement("style");
+          s.id = "__promo_hide";
+          s.textContent = css;
+          document.documentElement.appendChild(s);
+        }
+        if (!needles.length || !document.body) return;
+        const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+          const text = n.nodeValue.toLowerCase();
+          if (needles.some((x) => text.includes(x)) && n.parentElement) n.parentElement.style.setProperty("visibility", "hidden", "important");
+        }
+      };
+      const start = () => {
+        sweep();
+        // Batch a burst of mutations into one sweep; a microtask still runs before paint.
+        let queued = false;
+        const later = () => {
+          if (queued) return;
+          queued = true;
+          queueMicrotask(() => ((queued = false), sweep()));
+        };
+        new MutationObserver(later).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+      };
+      if (document.documentElement) start();
+      else document.addEventListener("DOMContentLoaded", start);
+    }, { hide, hideTexts });
+  }
 
   let mouse = { x: viewport.width * 0.62, y: viewport.height * 0.58 };
 
