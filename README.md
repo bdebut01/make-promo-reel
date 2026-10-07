@@ -36,14 +36,14 @@ prototype or mockup (an HTML file) when there's no app yet.
 **Claude Code plugin** (adds the skill and keeps it updatable):
 
 ```
-/plugin marketplace add OWNER/make-promo-reel
+/plugin marketplace add bdebut01/make-promo-reel
 /plugin install make-promo-reel@make-promo-reel
 ```
 
 **skills CLI** (any agent that reads `SKILL.md`):
 
 ```sh
-npx skills add OWNER/make-promo-reel
+npx skills add bdebut01/make-promo-reel
 ```
 
 **By hand**: copy `skills/make-promo-reel/` into `~/.claude/skills/` (personal) or

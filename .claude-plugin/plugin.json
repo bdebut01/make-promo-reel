@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Make a 10–30s promo video of a web app from real screen recordings, demo data and Remotion motion graphics.",
   "author": { "name": "make-promo-reel contributors" },
-  "homepage": "https://github.com/OWNER/make-promo-reel",
-  "repository": "https://github.com/OWNER/make-promo-reel",
+  "homepage": "https://github.com/bdebut01/make-promo-reel",
+  "repository": "https://github.com/bdebut01/make-promo-reel",
   "license": "MIT",
   "keywords": ["video", "promo", "remotion", "playwright", "marketing", "demo"]
 }

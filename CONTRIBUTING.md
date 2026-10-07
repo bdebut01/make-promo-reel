@@ -19,7 +19,7 @@ kinds of change are welcome.
 ## Working on the skill
 
 ```sh
-git clone https://github.com/OWNER/make-promo-reel
+git clone https://github.com/bdebut01/make-promo-reel
 ln -s "$PWD/make-promo-reel/skills/make-promo-reel" ~/.claude/skills/make-promo-reel
 ```
 
