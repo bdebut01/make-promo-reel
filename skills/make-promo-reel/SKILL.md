@@ -203,10 +203,10 @@ Read what the project says about itself first: README, AGENTS.md or CLAUDE.md, C
    remote, ask which state to film (the checked-out branch, or `main` / `origin/main`): a
    promo should usually show what users can actually use. Run
    `git clone --local <path> <ws>/app` for that state. If a sandbox refuses it (writing
-   `.git/config` or hooks is often denied), export that commit instead. Write the commit hash to
-   `<ws>/app.commit`, then run `git -C <path> archive --format=tar -o <ws>/app.tar <commit>` and
-   `tar -xf <ws>/app.tar -C <ws>/app` (tar ships with Windows 10+ too). `git archive` only reads
-   the checkout, and `slim.mjs` handles a copy with no `.git` from `app.commit`. Then copy the untracked env files (`.env`, `.env.local`) across, replacing any production keys,
+   `.git/config` or hooks is often denied), export that commit instead:
+   `node <skill>/scripts/export-app.mjs --src <path> --commit <commit> --to <ws>/app`, which
+   exports it with `git archive` (reading the checkout only) and writes `<ws>/app.commit`.
+   `slim.mjs` later handles a copy with no `.git` from that file. Then copy the untracked env files (`.env`, `.env.local`) across, replacing any production keys,
    tokens or database URLs in the copy with local or test-mode values. If the checkout has uncommitted
    changes, ask whether the video should show them; if yes, copy the working tree instead
    (excluding `node_modules`, `.venv`, build output and databases). The user's own checkout,

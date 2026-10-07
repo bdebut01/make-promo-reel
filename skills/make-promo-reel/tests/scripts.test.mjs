@@ -7,6 +7,7 @@ import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
+import { exportApp } from "../scripts/export-app.mjs";
 import { guard } from "../scripts/guard.mjs";
 
 const scripts = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "scripts");
@@ -98,10 +99,10 @@ test("slim saves an exported copy's edits and rebuild-app.mjs restores them", ()
   const ws = path.join(t, "work");
   const app = path.join(ws, "app");
   fs.mkdirSync(app, { recursive: true });
-  const commit = git(src, "rev-parse", "HEAD").trim();
-  fs.writeFileSync(path.join(ws, "app.commit"), commit + "\n");
-  git(src, "archive", "--format=tar", "-o", path.join(t, "a.tar"), commit);
-  execFileSync("tar", ["-xf", path.join(t, "a.tar"), "-C", app]);
+  node("export-app.mjs", ["--src", src, "--to", app]);
+  assert.equal(fs.readFileSync(path.join(ws, "app.commit"), "utf8").trim(), git(src, "rev-parse", "HEAD").trim());
+  // git archive follows core.autocrlf (on in Windows CI), like a checkout would.
+  assert.equal(fs.readFileSync(path.join(app, "app.txt"), "utf8").replace(/\r/g, ""), "one\n");
   fs.writeFileSync(path.join(app, "app.txt"), "two\n");
   fs.rmSync(path.join(app, "gone.txt"));
   fs.mkdirSync(path.join(app, "node_modules"));

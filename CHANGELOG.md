@@ -22,7 +22,9 @@ First public release.
   gains `license` and `compatibility`, and CI runs the Agent Skills validator.
 - Reel folders are dated `YYYY-MM-DD`.
 - Cross-platform (macOS, Linux, Windows): `guard` and `slim` are Node (`guard.mjs`,
-  `slim.mjs`, which writes `rebuild-app.mjs`), taking `--ws`/`--src` flags in any shell; new
+  `slim.mjs`, which writes `rebuild-app.mjs`), taking `--ws`/`--src` flags in any shell;
+  `export-app.mjs` exports a commit without a tar program (Git Bash's GNU tar can't take
+  `C:\` paths); new
   `port.mjs` (free, wait, who, stop) and `serve.mjs` replace `lsof`, `kill`, `curl` polling and
   `python3 -m http.server`; Python is no longer required. The template spawns Remotion's ffmpeg
   without `npx` and builds file URLs portably. `.gitattributes` keeps LF everywhere, and CI

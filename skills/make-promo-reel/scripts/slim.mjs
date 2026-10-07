@@ -12,12 +12,13 @@
 //   node <skill>/scripts/slim.mjs --ws <reel>/work --src <checkout>
 //
 // Afterwards: copy or timing fixes need `npm ci` in studio/; re-filming needs
-// `node rebuild-app.mjs`, then setup (notes.md). Uses git and tar, so it runs on macOS, Linux
-// and Windows 10+.
+// `node rebuild-app.mjs`, then setup (notes.md). Plain Node and git, so it runs on macOS,
+// Linux and Windows.
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { exportApp, untar } from "./export-app.mjs";
 import { guard, Refused, takeFlags } from "./guard.mjs";
 
 const dry = takeFlags(process.argv.slice(2)).includes("--dry-run");
@@ -126,9 +127,7 @@ if (fs.existsSync(at("app-extra"))) fs.cpSync(at("app-extra"), at("app"), { recu
   }
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "slim-"));
   const fresh = path.join(tmp, "a");
-  fs.mkdirSync(fresh);
-  git("-C", src, "archive", "--format=tar", "-o", path.join(tmp, "a.tar"), commit);
-  execFileSync("tar", ["-xf", path.join(tmp, "a.tar"), "-C", fresh]);
+  exportApp({ src, commit, to: fresh });
   const now = files(app);
   const then = new Set(files(fresh));
   const changed = now.filter((f) => !then.has(f) || !fs.readFileSync(path.join(app, f)).equals(fs.readFileSync(path.join(fresh, f))));
@@ -142,10 +141,11 @@ if (fs.existsSync(at("app-extra"))) fs.cpSync(at("app-extra"), at("app"), { recu
     for (const f of changed) copy(path.join(app, f), at("app-changes", f));
     fs.writeFileSync(at("app-deleted.txt"), deleted.map((f) => f.split(path.sep).join("/")).join("\n"));
     for (const f of envs) copy(path.join(app, f), at("app-env", f));
-    writeRebuild(`fs.mkdirSync(at("app"));
-run("git", "-C", src, "archive", "--format=tar", "-o", at("app.tar"), commit);
-run("tar", "-xf", at("app.tar"), "-C", at("app"));
-fs.rmSync(at("app.tar"));
+    // The unpacker goes into the script itself, so rebuild-app.mjs doesn't depend on where the
+    // skill is installed (and never on a tar program; see export-app.mjs).
+    writeRebuild(`${untar.toString()}
+fs.mkdirSync(at("app"));
+untar(execFileSync("git", ["-C", src, "archive", "--format=tar", commit], { maxBuffer: 2 ** 31 - 1 }), at("app"));
 if (fs.existsSync(at("app-changes"))) fs.cpSync(at("app-changes"), at("app"), { recursive: true });
 for (const f of fs.readFileSync(at("app-deleted.txt"), "utf8").split("\\n").filter(Boolean)) fs.rmSync(at("app", f), { force: true });`);
     console.log(`saved app.commit, app-changes/ (${changed.length} files), app-deleted.txt, app-env/, rebuild-app.mjs`);

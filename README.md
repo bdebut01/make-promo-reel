@@ -72,7 +72,7 @@ It follows the open [Agent Skills](https://agentskills.io) format, so any agent 
 Works on **macOS, Linux and Windows** (10 or later). The skill's own scripts are plain Node,
 and CI runs their tests on all three.
 
-- **Node 20+** and **git** (Windows 10+ also ships the `tar` and `curl` the skill uses).
+- **Node 20+** and **git** (and `curl` for the music library, which Windows 10+ also ships).
 - Whatever your app needs to run locally (its database, its language runtime).
 - **Chromium**, through one of:
   - the host: the skill runs `npx playwright install chromium` in its studio folder, or
