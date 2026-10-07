@@ -1,5 +1,7 @@
 # make-promo-reel
 
+![make-promo-reel: ask for a promo in one prompt, get real footage of your app cut as a launch video](assets/make-promo-reel.gif)
+
 An [Agent Skill](https://docs.claude.com/en/docs/claude-code/skills) that turns a web app into a
 10–30 second promo video: real screen recordings of the app in use, filled with believable demo
 data, finished with SaaS-launch-style motion graphics, and rendered to MP4.
@@ -15,6 +17,7 @@ prototype or mockup (an HTML file) when there's no app yet.
 ## What you get
 
 - **16:9, 1:1 or 9:16** cuts from one set of footage: landing-page hero, feed post, Stories/Reels.
+  Each cut renders to MP4, and to a GIF for READMEs and docs.
 - **Your app's own look.** It picks up fonts, colors, logo, mascot art and content photos from
   the repo, or from a design system, CSS/HTML file or media you supply.
 - **A demo world that feels lived-in**: one protagonist, a small cast, specific content,
@@ -151,6 +154,9 @@ records which track it used.
 
 This skill focuses on one thing those don't do: filming your real, running app in a safe
 isolated copy, with a believable demo world, and cutting it into a finished promo.
+
+The GIF at the top was made with the skill itself: a fictional app ("Weekly") filmed and cut by
+the normal pipeline, shown playing after a mock terminal session.
 
 ## Contributing
 

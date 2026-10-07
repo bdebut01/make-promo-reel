@@ -10,6 +10,7 @@
     "shots": "node shots.mjs",
     "frames": "node frames.mjs",
     "loudness": "node loudness.mjs",
+    "gif": "node gif.mjs",
     "postinstall": "node sfx.mjs"
   },
   "dependencies": {

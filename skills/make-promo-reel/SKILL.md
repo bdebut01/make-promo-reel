@@ -38,6 +38,8 @@ The capture and compositing are mechanical, and the bundled scripts handle most 
   how the cuts sit on the beat.
 - `template/loudness.mjs`: measures a rendered cut's loudness and true peak against the
   -14 LUFS social target.
+- `template/gif.mjs`: turns a rendered cut into a GIF with a palette made from the whole clip,
+  for a README or docs page where video doesn't autoplay.
 - `scripts/avatars.mjs`: initials-on-gradient profile pictures for demo people.
 - `template/sfx.mjs`: synthesizes the UI sound kits (clicks, keys, whoosh, chime, pops) on
   `npm install`. Nothing to find or license.
@@ -168,6 +170,7 @@ Then ask the rest in **one round**, each with a default the user can just accept
    | Stories, Reels, TikTok | 9:16 | 15s | quick, punchy | visit / follow |
    | Feed post (LinkedIn, X, Instagram) | 1:1 | 15s | clean, professional | visit |
    | Launch (Product Hunt, announcement) | 16:9 | 30s | a fuller tour | try it / upvote |
+| README or docs (GIF) | 16:9 | 10s | loops, silent, readable at 800px | install / visit |
 
    Several uses means several cuts from the same footage.
 2. **Longest it should run:** a cap, not a target. Default 20s, or the use's cap above. The
@@ -523,6 +526,12 @@ Write `studio/public/promo.json`. The example in the template and `src/types.ts`
   Chromium (`remotion.config.ts` and `sheet.mjs` read `$CHROME`). For another aspect ratio,
   write `promo-9x16.json` with the new `width`/`height` (and mobile clips) and run
   `npm run render -- out/<app>-reel-9x16.mp4 --props=public/promo-9x16.json`.
+- **A GIF** (a README, docs, an issue): render the MP4 first, then
+  `npm run gif -- out/<app>-reel-16x9.mp4 out/<app>-reel.gif 800 15`. Don't use Remotion's own
+  `--codec=gif`: the template's quality settings don't apply to it, and its palette is worse. A
+  GIF has no sound, so set `"sfx": false` and `"music": null` for that cut, and keep it to about
+  10s. The script prints the size: GitHub shows GIFs up to 10 MB inline, ideally under 5 MB.
+  Shorten the cut first, then drop the fps to 12, then the width.
 
 The template is a starting point, not a cage. If the storyboard wants something the config can't
 express, such as a number counting up, a split screen or two clips side by side, edit the
