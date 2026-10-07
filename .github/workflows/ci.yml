@@ -1,0 +1,42 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax-check scripts
+        run: |
+          for f in $(git ls-files '*.mjs'); do node --check "$f"; done
+          for f in skills/make-promo-reel/scripts/*.sh; do sh -n "$f"; done
+          bash -n skills/make-promo-reel/scripts/box
+      - name: ShellCheck
+        run: shellcheck -S error skills/make-promo-reel/scripts/*.sh skills/make-promo-reel/scripts/box skills/make-promo-reel/tests/*.sh
+      - name: Guard refuses what it should
+        run: sh skills/make-promo-reel/tests/guard-test.sh
+      - name: Skill frontmatter
+        run: |
+          f=skills/make-promo-reel/SKILL.md
+          head -1 "$f" | grep -qx -- '---'
+          grep -q '^name: make-promo-reel$' "$f"
+          len=$(grep '^description: ' "$f" | head -1 | sed 's/^description: //' | wc -c)
+          echo "description: $len chars"; [ "$len" -le 1024 ]
+      - name: JSON files parse
+        run: for f in $(git ls-files '*.json'); do node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" || exit 1; done
+      - name: No machine-specific paths
+        run: "! git grep -nE '/Users/[a-z]|/home/[a-z]|Desktop/cs' -- ':!CONTRIBUTING.md' ':!README.md' | grep -v '/Users/<you>'"
+      - name: Template typechecks and synthesizes sounds
+        working-directory: skills/make-promo-reel/template
+        run: |
+          npm install --no-audit --no-fund
+          npx tsc
+          ls public/sfx/soft
+      - name: Music library lists
+        run: node skills/make-promo-reel/scripts/music.mjs list

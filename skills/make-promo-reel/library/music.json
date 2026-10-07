@@ -1,0 +1,16 @@
+{
+  "about": "Curated beds for promo reels. Every track is from Mixkit under the Mixkit Stock Music Free License: free for commercial use (ads, social, product videos), no attribution required; don't redistribute the files as-is. Picked from Mixkit's own mood tags; measured: startAt skips a quiet intro, rms is loudness (music.mjs levels tracks to each other from it), bpm is approximate.",
+  "license": { "name": "Mixkit Stock Music Free License", "url": "https://mixkit.co/license/#musicFree" },
+  "tracks": [
+    { "id": "440",  "title": "Infinity",           "artist": "Arulo",                    "genre": "Corporate", "seconds": 103, "url": "https://assets.mixkit.co/music/440/440.mp3",   "moods": ["clean"],               "energy": "calm",   "startAt": 0.1,  "rms": 0.122, "bpm": 75 },
+    { "id": "834",  "title": "It's Love",          "artist": "Michael Ramir C.",         "genre": "Corporate", "seconds": 97,  "url": "https://assets.mixkit.co/music/834/834.mp3",   "moods": ["clean"],               "energy": "medium", "startAt": 4.2,  "rms": 0.189, "bpm": 111 },
+    { "id": "158",  "title": "Happy Times",        "artist": "Alejandro Magaña (A. M.)", "genre": "Pop",       "seconds": 100, "url": "https://assets.mixkit.co/music/158/158.mp3",   "moods": ["clean", "playful"],    "energy": "lively", "startAt": 0,    "rms": 0.244, "bpm": 120 },
+    { "id": "1052", "title": "Baby Yohan",         "artist": "Michael Ramir C.",         "genre": "Folk Pop",  "seconds": 95,  "url": "https://assets.mixkit.co/music/1052/1052.mp3", "moods": ["playful"],             "energy": "calm",   "startAt": 0,    "rms": 0.057, "bpm": 107 },
+    { "id": "839",  "title": "Tears of Joy",       "artist": "Michael Ramir C.",         "genre": "Folk Pop",  "seconds": 140, "url": "https://assets.mixkit.co/music/839/839.mp3",   "moods": ["playful", "clean"],    "energy": "medium", "startAt": 0,    "rms": 0.212, "bpm": 125 },
+    { "id": "644",  "title": "Upbeat Jazz",        "artist": "Francisco Alvear",         "genre": "Jazz",      "seconds": 110, "url": "https://assets.mixkit.co/music/644/644.mp3",   "moods": ["playful"],             "energy": "lively", "startAt": 10.4, "rms": 0.201, "bpm": 107 },
+    { "id": "851",  "title": "Me and You",         "artist": "Michael Ramir C.",         "genre": "Rock",      "seconds": 157, "url": "https://assets.mixkit.co/music/851/851.mp3",   "moods": ["playful", "clean"],    "energy": "lively", "startAt": 3.5,  "rms": 0.159, "bpm": 130 },
+    { "id": "1012", "title": "Take this Higher",   "artist": "Michael Ramir C.",         "genre": "EDM",       "seconds": 99,  "url": "https://assets.mixkit.co/music/1012/1012.mp3", "moods": ["bold-dark", "clean"],  "energy": "lively", "startAt": 4.1,  "rms": 0.165, "bpm": 125 },
+    { "id": "726",  "title": "Uplifting Bass",     "artist": "Lily J",                   "genre": "Ambient",   "seconds": 96,  "url": "https://assets.mixkit.co/music/726/726.mp3",   "moods": ["bold-dark"],           "energy": "calm",   "startAt": 2.8,  "rms": 0.214, "bpm": 88 },
+    { "id": "126",  "title": "Trap Electro Vibes", "artist": "Alejandro Magaña (A. M.)", "genre": "Electronic","seconds": 116, "url": "https://assets.mixkit.co/music/126/126.mp3",   "moods": ["bold-dark"],           "energy": "lively", "startAt": 4.0,  "rms": 0.197, "bpm": 111 }
+  ]
+}

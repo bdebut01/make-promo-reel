@@ -1,0 +1,8 @@
+node_modules/
+out/
+.DS_Store
+.claude/
+**/template/public/sfx/
+**/template/public/captures/
+**/template/public/music/
+*.log

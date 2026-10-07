@@ -1,0 +1,47 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "maxSeconds": 20,
+  "mood": "clean",
+  "brand": {
+    "name": "Weekly",
+    "primary": "#0f766e",
+    "accent": "#f59e0b",
+    "url": "weekly.app"
+  },
+  "music": null,
+  "scenes": [
+    {
+      "type": "intro",
+      "duration": 2.2,
+      "headline": "Plan the week *together*",
+      "sub": "Shared schedules for small teams"
+    },
+    {
+      "type": "shot",
+      "clip": "week",
+      "caption": "Everyone's week, *one view*",
+      "zoom": "none",
+      "trim": [
+        0.2,
+        4.2
+      ]
+    },
+    {
+      "type": "shot",
+      "clip": "move",
+      "caption": "Reschedule in *one drag*",
+      "trim": [
+        0.2,
+        4.2
+      ]
+    },
+    {
+      "type": "end",
+      "duration": 3.2,
+      "headline": "Less planning. More doing.",
+      "cta": "Try it free"
+    }
+  ]
+}

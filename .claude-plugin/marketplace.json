@@ -1,0 +1,11 @@
+{
+  "name": "make-promo-reel",
+  "owner": { "name": "make-promo-reel contributors" },
+  "plugins": [
+    {
+      "name": "make-promo-reel",
+      "source": "./",
+      "description": "Make a 10–30s promo video of a web app from real screen recordings, demo data and Remotion motion graphics."
+    }
+  ]
+}
