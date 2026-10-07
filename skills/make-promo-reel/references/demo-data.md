@@ -82,7 +82,7 @@ in `design-sources.md` under "Supplied media".
   thumbnails).
 - Write the seed as a script in the workspace (`<ws>/seed.py`, `seed.ts`, …) rather than
   one-off shell commands, so the world can be rebuilt from scratch after a bad take. The reset
-  script that wipes the database and media first runs `guard.sh` on exactly the paths or
+  script that wipes the database and media first runs `guard.mjs` on exactly the paths or
   database names it's about to delete (see SKILL.md, "Guard every destructive step").
 - Some apps disable signals during bulk loads. If the app ships a custom loader for its
   fixtures, use it. If that loader fails against the current schema, go back to the ORM (see

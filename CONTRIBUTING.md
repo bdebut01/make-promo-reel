@@ -43,7 +43,7 @@ npx tsc               # typecheck
   goes in a `references/` file that `SKILL.md` says when to read.
 - Write for any agent. Describe what to do in terms of capabilities ("a background task the
   agent can stop", "if subagents are available"), and put product-specific details, such as
-  Claude Code's tools or sandbox, in `references/agent-environments.md`.
+  Claude Code's tools or sandbox, in `references/environments.md`.
 - Keep the frontmatter valid YAML: quote the description, or keep `: ` and ` #` out of it.
   CI checks it with the spec's own validator.
 - Write for an agent that can't ask you: plain words, one meaning per sentence, concrete
@@ -53,11 +53,16 @@ npx tsc               # typecheck
 
 ### Code
 
-- Plain Node ESM for scripts, with no dependencies beyond what `template/package.json` installs.
-  POSIX `sh` for shell scripts (`box` is bash).
+- Plain Node ESM for scripts, with no dependencies beyond what `template/package.json` installs,
+  so they run the same on macOS, Linux and Windows. Spawn programs with `execFileSync` and an
+  argument list (never a shell string), build file URLs with `pathToFileURL`, and join paths
+  with `path`. `box` is the one bash script, because it only serves macOS and Linux sandboxes.
 - Pin versions. Playwright in `template/package.json` must match the `box` image tag.
-- Anything that deletes goes through `guard.sh`. A PR that weakens the guard needs a strong
-  reason in its description.
+- Anything that deletes goes through `guard.mjs`. A PR that weakens the guard needs a strong
+  reason in its description, and a test in `tests/`.
+- Instructions shouldn't assume an OS. Prefer the Node scripts to shell one-liners; where a step
+  really differs (paths, the shell, Python's venv layout), note it in
+  `references/environments.md` under Windows.
 
 ## Before you open a PR
 
@@ -65,8 +70,8 @@ CI runs these checks. Run them locally:
 
 ```sh
 for f in $(git ls-files '*.mjs'); do node --check "$f"; done
-shellcheck -S error skills/make-promo-reel/scripts/*.sh skills/make-promo-reel/scripts/box
-sh skills/make-promo-reel/tests/guard-test.sh
+shellcheck -S error skills/make-promo-reel/scripts/box
+node --test skills/make-promo-reel/tests/scripts.test.mjs
 (cd skills/make-promo-reel/template && npm install --ignore-scripts && npx tsc)
 ```
 

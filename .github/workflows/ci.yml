@@ -5,6 +5,7 @@ on:
   pull_request:
 
 jobs:
+  # Repo-wide checks; these don't depend on the OS.
   check:
     runs-on: ubuntu-latest
     steps:
@@ -12,15 +13,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Syntax-check scripts
+      - name: ShellCheck (box, the one bash script)
         run: |
-          for f in $(git ls-files '*.mjs'); do node --check "$f"; done
-          for f in skills/make-promo-reel/scripts/*.sh; do sh -n "$f"; done
           bash -n skills/make-promo-reel/scripts/box
-      - name: ShellCheck
-        run: shellcheck -S error skills/make-promo-reel/scripts/*.sh skills/make-promo-reel/scripts/box skills/make-promo-reel/tests/*.sh
-      - name: Guard refuses what it should
-        run: sh skills/make-promo-reel/tests/guard-test.sh
+          shellcheck -S error skills/make-promo-reel/scripts/box
       - uses: astral-sh/setup-uv@v6
       - name: Valid skill (Agent Skills spec validator)
         run: uvx --from "git+https://github.com/agentskills/agentskills#subdirectory=skills-ref" skills-ref validate skills/make-promo-reel
@@ -40,11 +36,46 @@ jobs:
             echo "Replace personal paths with placeholders like /Users/<you>/ or <skill>/"
             exit 1
           fi
-      - name: Template typechecks and synthesizes sounds
+      - name: Music library lists
+        run: node skills/make-promo-reel/scripts/music.mjs list
+
+  # The skill's scripts and the studio template, on every OS the skill supports.
+  scripts:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax-check scripts
+        run: for f in $(git ls-files '*.mjs'); do node --check "$f"; done
+      - name: Script tests (guard, slim and rebuild, port, serve)
+        run: node --test skills/make-promo-reel/tests/scripts.test.mjs
+      - name: Template installs, synthesizes sounds and typechecks
         working-directory: skills/make-promo-reel/template
         run: |
           npm install --no-audit --no-fund
           npx tsc
           ls public/sfx/soft
-      - name: Music library lists
-        run: node skills/make-promo-reel/scripts/music.mjs list
+      - name: Remotion's ffmpeg starts the way gif.mjs and loudness.mjs start it
+        working-directory: skills/make-promo-reel/template
+        run: |
+          node --input-type=module -e "
+            import { spawnSync } from 'node:child_process';
+            import fs from 'node:fs';
+            import { createRequire } from 'node:module';
+            import path from 'node:path';
+            const require = createRequire(path.resolve('gif.mjs'));
+            const pkg = require.resolve('@remotion/cli/package.json');
+            const cli = path.join(path.dirname(pkg), JSON.parse(fs.readFileSync(pkg, 'utf8')).bin.remotion);
+            const r = spawnSync(process.execPath, [cli, 'ffmpeg', '-version'], { encoding: 'utf8' });
+            console.log((r.stdout || r.stderr).split('\n')[0]);
+            process.exit(r.status);
+          "

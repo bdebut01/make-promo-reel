@@ -7,6 +7,15 @@
 // prints the factor to scale `music.volume` and `sfx.volume` by. A cut with no audio passes.
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
+
+// Remotion's bundled ffmpeg, run through its CLI with this Node, so no shell or npx is needed
+// (Windows can't spawn npx.cmd directly).
+const require = createRequire(import.meta.url);
+const cliPkg = require.resolve("@remotion/cli/package.json");
+const cli = path.join(path.dirname(cliPkg), JSON.parse(fs.readFileSync(cliPkg, "utf8")).bin.remotion);
+const ffmpeg = (args) => spawnSync(process.execPath, [cli, "ffmpeg", ...args], { encoding: "utf8", maxBuffer: 1 << 26 });
 
 const TARGET = -14;
 const TOLERANCE = 2;
@@ -17,7 +26,7 @@ if (!file || !fs.existsSync(file)) {
   console.error("usage: node loudness.mjs <rendered.mp4>");
   process.exit(1);
 }
-const run = spawnSync("npx", ["--no-install", "remotion", "ffmpeg", "-hide_banner", "-nostats", "-i", file, "-vn", "-af", "loudnorm=I=-14:TP=-1:print_format=json", "-c:a", "pcm_s16le", "-f", "null", "-"], { encoding: "utf8" });
+const run = ffmpeg(["-hide_banner", "-nostats", "-i", file, "-vn", "-af", "loudnorm=I=-14:TP=-1:print_format=json", "-c:a", "pcm_s16le", "-f", "null", "-"]);
 const log = `${run.stdout}\n${run.stderr}`;
 if (!/Stream #.*Audio/.test(log)) {
   console.log(`${file}: no audio track (fine for a muted cut)`);

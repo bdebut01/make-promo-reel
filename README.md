@@ -58,7 +58,7 @@ document their own.
 It follows the open [Agent Skills](https://agentskills.io) format, so any agent that loads
 `SKILL.md` skills and can run shell commands can use it. It was written and tested in
 **Claude Code**. A few steps work best there, and each has a fallback elsewhere
-(`references/agent-environments.md`):
+(`references/environments.md`):
 
 | Feature | In Claude Code | Elsewhere |
 |---|---|---|
@@ -69,15 +69,19 @@ It follows the open [Agent Skills](https://agentskills.io) format, so any agent 
 
 ## Requirements
 
-- **Node 20+**, **git** and **Python 3** (the safety guard uses it to resolve paths).
+Works on **macOS, Linux and Windows** (10 or later). The skill's own scripts are plain Node,
+and CI runs their tests on all three.
+
+- **Node 20+** and **git** (Windows 10+ also ships the `tar` and `curl` the skill uses).
 - Whatever your app needs to run locally (its database, its language runtime).
 - **Chromium**, through one of:
   - the host: the skill runs `npx playwright install chromium` in its studio folder, or
-  - **Docker**, via the bundled `scripts/box`. You need this when the agent runs in a sandbox
-    where Chromium can't launch, as in Claude Code's sandbox on macOS. `box` runs the
-    browser in the official Playwright image and mounts only the one folder it's given.
+  - **Docker**, via the bundled `scripts/box` (macOS and Linux). You need this only when the
+    agent runs in a sandbox where Chromium can't launch, as in Claude Code's sandbox on macOS.
+    `box` runs the browser in the official Playwright image and mounts only the one folder
+    it's given.
 
-No ffmpeg or other system-wide installs are needed: Remotion bundles its own.
+No ffmpeg, Python or other system-wide installs are needed: Remotion bundles its own ffmpeg.
 
 ### Using it inside a sandbox (Claude Code and similar)
 
@@ -109,7 +113,7 @@ this can't reach your data:
 - It films a **disposable copy** of your app (`git clone --local` or `git archive`). The copy
   has its own database and ports, and test-mode or console backends for email, payments and
   SMS. It never touches your checkout, your database, your running servers or your branches.
-- Every destructive command goes through **`scripts/guard.sh`**. The guard resolves symlinks
+- Every destructive command goes through **`scripts/guard.mjs`**. The guard resolves symlinks
   and `..` and refuses any path outside the reel's workspace or inside your checkout. It also
   refuses any database name that doesn't end in `_promo`.
 - It never uses production keys, even read-only ones.
@@ -125,17 +129,21 @@ skills/make-promo-reel/
   SKILL.md                 the workflow: intake → run in isolation → demo world →
                            storyboard → capture → compose → deliver
   references/              loaded on demand: motion language, running apps per stack,
-                           demo data, design sources
+                           demo data, design sources, sound and output, environments
+                           (Windows, sandboxes, agent features)
   scripts/
     capture.mjs            Playwright recorder: crisp screencast frames + a cursor/click log
-    guard.sh, slim.sh      destructive-step guard; shrinks a finished reel to tens of MB
-    box                    run a browser command in a one-folder Docker container
+    guard.mjs              refuses destructive targets outside the reel's workspace
+    slim.mjs               shrinks a finished reel to tens of MB, with a rebuild script
+    port.mjs, serve.mjs    check, wait on and stop app ports; serve a design to film
+    box                    run a browser command in a one-folder Docker container (bash)
     music.mjs              pick, fetch and level a bed from library/music.json
     design-tokens.mjs      pull colors, fonts and radius out of CSS/HTML/token JSON
     avatars.mjs            initials-on-gradient profile pictures
   template/                the Remotion "studio" copied into each reel; promo.json drives it
   library/music.json       ten curated Mixkit tracks with mood, energy, BPM and loudness
   evals/evals.json         eval templates (landing hero, Stories, LinkedIn, design system)
+  tests/                   node --test, for the scripts above
 ```
 
 The video is described by `promo.json` (schema: `template/src/types.ts`). It lists an intro,

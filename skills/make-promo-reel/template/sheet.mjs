@@ -7,6 +7,7 @@ import { renderStill, selectComposition } from "@remotion/renderer";
 import { chromium } from "playwright";
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const [count = 12, fromArg, toArg] = process.argv.slice(2).map(Number);
 const out = path.resolve("out/sheet");
@@ -57,7 +58,7 @@ for (const frame of frames) {
 
 const cols = composition.width >= composition.height ? 4 : 6;
 const tiles = frames
-  .map((f) => `<figure><img src="file://${path.join(out, `${f}.jpeg`)}"><figcaption>f${f} · ${(f / composition.fps).toFixed(2)}s</figcaption></figure>`)
+  .map((f) => `<figure><img src="${pathToFileURL(path.join(out, `${f}.jpeg`)).href}"><figcaption>f${f} · ${(f / composition.fps).toFixed(2)}s</figcaption></figure>`)
   .join("");
 const html = `<html><body style="margin:0;background:#222;font:14px system-ui;color:#ddd"><div style="display:grid;grid-template-columns:repeat(${cols},auto);gap:8px;padding:8px;width:max-content">${tiles}</div>
 <style>figure{margin:0}img{display:block;width:${composition.width >= composition.height ? 420 : 200}px}figcaption{padding:3px 0}</style></body></html>`;
@@ -65,7 +66,7 @@ fs.writeFileSync(path.join(out, "sheet.html"), html);
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
-await page.goto(`file://${path.join(out, "sheet.html")}`);
+await page.goto(pathToFileURL(path.join(out, "sheet.html")).href);
 await page.locator("div").first().screenshot({ path: path.resolve("out/sheet.png") });
 await browser.close();
 console.log(`out/sheet.png — ${frames.length} frames of ${composition.durationInFrames} (${(composition.durationInFrames / composition.fps).toFixed(1)}s)`);

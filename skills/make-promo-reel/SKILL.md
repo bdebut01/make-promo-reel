@@ -2,7 +2,7 @@
 name: make-promo-reel
 description: Make a short (10–30s) promo or teaser video for a web app from real screen recordings of the app in use, filled with believable demo data and finished with industry-standard motion graphics (browser or phone frame, a restrained payoff zoom, kinetic captions, a branded intro and CTA end card) built from the app's own fonts, art and photos, or steered by a design system, HTML/CSS file or design artifact the user supplies (which can also be filmed in place of an app, for a prototype or mockup reel) and their own logos, art and photos. Handles the whole pipeline — learning to run the app in isolation, seeding demo data, storyboarding, scripted Playwright capture, and Remotion rendering to MP4 or GIF in 16:9, 1:1 or 9:16. Use this whenever someone wants a promo, launch video, sizzle reel, product teaser, demo clip, app trailer, social video, README GIF, Product Hunt or landing-page hero video, or "a quick video showing off the app", even if they don't say "promo".
 license: MIT
-compatibility: Any agent that can run shell commands. Needs Node 20+, git, Python 3 and network access; Chromium through Playwright, or Docker where a sandbox blocks it. Written and tested in Claude Code.
+compatibility: Any agent that can run shell commands, on macOS, Linux or Windows. Needs Node 20+, git and network access; Chromium through Playwright, or Docker where a sandbox blocks it. Written and tested in Claude Code.
 ---
 
 # App promo video
@@ -45,9 +45,11 @@ The capture and compositing are mechanical, and the bundled scripts handle most 
   attribution) picked by mood and energy, fetched once into `<reels>/_music/`.
 - `scripts/design-tokens.mjs`: reads a design source's CSS, HTML or token JSON and prints its
   colors (as hex), fonts, font files and radius, with suggested `brand` fields.
-- `scripts/guard.sh`: refuses any destructive target outside the workspace. See below.
+- `scripts/guard.mjs`: refuses any destructive target outside the workspace. See below.
+  `slim.mjs` shrinks a finished reel; `port.mjs` checks, waits on and stops the app's ports;
+  `serve.mjs` serves a design folder to film. All plain Node, so they run on any OS.
 - `scripts/box`: runs a browser command in a Playwright Docker container that sees one folder,
-  for sandboxes where Chromium can't launch. See `references/agent-environments.md`.
+  for sandboxes where Chromium can't launch. See `references/environments.md`.
 - `references/motion-language.md`: pacing, caption copy, mood presets and timing templates.
   Read it before storyboarding.
 - `references/running-apps.md`: per-stack notes on running an app in isolation. Read it during
@@ -57,15 +59,15 @@ The capture and compositing are mechanical, and the bundled scripts handle most 
 - `references/design-sources.md`: using what the user supplies to steer the look. That's a
   design system, HTML/CSS file or design artifact (as the look, or as the thing to film), and
   logos, art, photos or headshots. Read it whenever the user supplies any of these.
-- `references/agent-environments.md`: what changes in a sandboxed shell (like Claude Code's),
-  without background tasks or subagents, and with or without claude.ai artifact access. Read it
-  at the start if your shell is sandboxed or checks commands before running them.
+- `references/environments.md`: what changes on Windows, in a sandboxed shell (like Claude
+  Code's), without background tasks or subagents, and with or without claude.ai artifact
+  access. Read it at the start if you're on Windows or your shell is sandboxed.
 
 ## Workspace
 
 Each request gets one reel folder outside the app's repo, named for the app and the day it's
 made (`YYYY-MM-DD`), so the user's checkout is never touched. Reels live under `<reels>`: the
-folder in `$PROMO_REELS` if it's set (check once with `echo $PROMO_REELS`), else
+folder in `$PROMO_REELS` if it's set (check once with `node -p process.env.PROMO_REELS`, which works in any shell), else
 `~/promo-reels/`. The finished videos sit at the top, where the user will look, and everything
 that made them is tucked into `work/`:
 
@@ -76,14 +78,15 @@ that made them is tucked into `work/`:
   README.md              per cut: format, length, shot list with captions, what's demo data,
                          how to re-cut
   sheets/                a contact sheet and the final promo.json for each cut
-  work/                  the workspace (<ws> below), and PROMO_WS for the guard
+  work/                  the workspace (<ws> below), and --ws for the guard
     notes.md             how to run, log in and seed; lets a later re-cut skip recon
     storyboard.md        the approved storyboard, with the approval line
     setup.sh             install, build, seed and start the app copy: the commands that worked
+                         (setup.ps1 in PowerShell)
     app/                 isolated copy of the app, with its own database (removed at handover)
     design/              copies of a supplied design source and its tokens.json, and media/
                          for supplied logos, art and photos (if any)
-    seed.py, reset.sh    rebuild the demo world (reset.sh is guarded)
+    seed.py, reset.mjs   rebuild the demo world (reset.mjs is guarded)
     studio/              copy of template/ plus capture.mjs, shots.mjs, avatars.mjs
       public/captures/   one folder per shot: frames + manifest.json
       public/promo.json  the video (promo-<cut>.json for each extra cut)
@@ -95,38 +98,38 @@ All of a reel's cuts share one `work/`: one app copy, one studio, one set of cap
 A second reel of the same app on the same day gets a `-2` suffix (`weekly-reel_2026-10-01-2`).
 If the user names another location, use that, as long as it isn't inside the app's checkout.
 Keep `notes.md` current as you learn things, and once the app runs, put the commands that
-worked into `setup.sh`, so a later re-film is one command.
+worked into a setup script, so a later re-film is one command.
 
 **In a sandboxed shell,** spell out absolute paths and put shell logic in script files, so
-each command can be checked before it runs; `references/agent-environments.md` explains why and
+each command can be checked before it runs; `references/environments.md` explains why and
 how. It matters here because a reel takes a few hundred commands.
 
 **Guard every destructive step.** Resetting the copy is routine: deleting its database, wiping
 its media, dropping or flushing a database, `docker compose down -v`. The one thing that must
 never happen is doing it to the user's own data. So every such command goes through
-`scripts/guard.sh` first. The guard reads `PROMO_WS` and `PROMO_SRC` from the environment, so
-call it from a script that sets them, never from a one-line `export … &&` command. Make the
-reset script the place for this:
+`scripts/guard.mjs` first, with `--ws` (the reel's `work/`) and `--src` (the user's checkout).
+Make the reset script the place for this. Writing it in Node keeps it the same on every OS:
 
-```sh
-# work/reset.sh: run as  sh /Users/<you>/promo-reels/<app>-reel_<YYYY-MM-DD>/work/reset.sh
-export PROMO_WS=/Users/<you>/promo-reels/<app>-reel_<YYYY-MM-DD>/work
-export PROMO_SRC=/path/to/users/checkout
-cd "$PROMO_WS"
-sh <skill>/scripts/guard.sh app/db.sqlite3 app/media || exit 1   # files and folders
-sh <skill>/scripts/guard.sh --db weekly_promo || exit 1          # database names
-rm -f app/db.sqlite3 …
+```js
+// work/reset.mjs: run as  node <ws>/reset.mjs
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+const ws = "<ws>", src = "/path/to/users/checkout";
+const guard = (...t) => execFileSync(process.execPath, ["<skill>/scripts/guard.mjs", "--ws", ws, "--src", src, ...t], { stdio: "inherit" });
+guard(`${ws}/app/db.sqlite3`, `${ws}/app/media`); // throws, stopping the script, on a refusal
+guard("--db", "weekly_promo");                     // database names
+fs.rmSync(`${ws}/app/db.sqlite3`, { force: true }); // …then reseed
 ```
 
-It resolves symlinks and `..`, and passes a path only when it's inside `PROMO_WS` and not inside
-`PROMO_SRC`. Databases you create are named `<app>_promo`, and the guard refuses any other
+It resolves symlinks and `..`, and passes a path only when it's inside `--ws` and not inside
+`--src`. Databases you create are named `<app>_promo`, and the guard refuses any other
 name. If the guard refuses, stop and find out why; don't work around it. A refusal means a path
 or variable points somewhere it shouldn't.
 
 **Look for an earlier reel of the same app first.** Recon is the slowest part, and a second
 promo for the same app should be able to start from step 4. Before step 2, list
 `<reels>` for `<app>-reel_*` folders. If one exists, read its `notes.md`,
-`setup.sh`, seed and reset scripts, `shots.mjs` and README, and reuse what still works: the
+setup, seed and reset scripts, `shots.mjs` and README, and reuse what still works: the
 run commands, the demo world, the login, the shot scripts. That reel may have been made with an
 older version of this skill, though. So check each reused setting against the current
 instructions before keeping it: the viewport, the captions, the brand assets, the timing.
@@ -201,24 +204,24 @@ Read what the project says about itself first: README, AGENTS.md or CLAUDE.md, C
    promo should usually show what users can actually use. Run
    `git clone --local <path> <ws>/app` for that state. If a sandbox refuses it (writing
    `.git/config` or hooks is often denied), export that commit instead. Write the commit hash to
-   `<ws>/app.commit`, then run `git -C <path> archive <commit>`, piped into `tar -x -C <ws>/app`,
-   from a script file. `git archive` only reads the checkout, and `slim.sh` handles a copy
-   with no `.git` from `app.commit`. Then copy the untracked env files (`.env`, `.env.local`) across, replacing any production keys,
+   `<ws>/app.commit`, then run `git -C <path> archive --format=tar -o <ws>/app.tar <commit>` and
+   `tar -xf <ws>/app.tar -C <ws>/app` (tar ships with Windows 10+ too). `git archive` only reads
+   the checkout, and `slim.mjs` handles a copy with no `.git` from `app.commit`. Then copy the untracked env files (`.env`, `.env.local`) across, replacing any production keys,
    tokens or database URLs in the copy with local or test-mode values. If the checkout has uncommitted
-   changes, ask whether the video should show them; if yes, rsync the working tree instead
+   changes, ask whether the video should show them; if yes, copy the working tree instead
    (excluding `node_modules`, `.venv`, build output and databases). The user's own checkout,
    database, running servers and branches are theirs: don't migrate, seed, edit, stash or kill
    anything there. The promo needs a world you can wreck and rebuild.
 2. **Give the copy its own database and ports.** Use a fresh SQLite file inside the copy, a new
    Postgres database named `<app>_promo`, or a throwaway container. Choose ports the user's dev
-   servers aren't using. Point outbound email, payments and SMS at console/test backends, so
+   servers aren't using (`node <skill>/scripts/port.mjs free <port>`). Point outbound email, payments and SMS at console/test backends, so
    seeding never sends anything real. Never use production keys or credentials, for anything,
    even read-only: the copy runs on local values and test-mode keys only.
 3. **Install and start it** as a background task your agent can stop later (in Claude Code,
-   the Bash tool's `run_in_background`), logging to a file, and poll until it answers with a
-   200. Don't detach it with `nohup`, `&` or `setsid`: in a sandbox, a later command can't stop
+   the Bash tool's `run_in_background`), logging to a file, and wait until it answers
+   (`node <skill>/scripts/port.mjs wait <port>`). Don't detach it with `nohup`, `&` or `setsid`: in a sandbox, a later command can't stop
    a detached process, and it holds its port after you're gone. Record each server's port and
-   task in `notes.md`, and stop them all before handing over. `agent-environments.md` covers
+   task in `notes.md`, and stop them all before handing over. `environments.md` covers
    agents without background tasks.
 4. **Prove it renders.** Take a Playwright screenshot of the main screen and look at it. Missing
    CSS or fonts, a dev asset server that isn't running, a debug toolbar, a framework dev overlay
@@ -330,7 +333,7 @@ default, run them on the host: `npm install --prefix /abs/studio` (which also sy
 sound kits), `npx --prefix /abs/studio playwright install chromium`, then
 `npm run shots --prefix /abs/studio`. If Chromium can't launch there, as inside Claude Code's
 sandbox, run every one of them through `<skill>/scripts/box` instead, as
-`references/agent-environments.md` describes. Pick one way after the first capture and keep it
+`references/environments.md` describes. Pick one way after the first capture and keep it
 for the whole reel. The short forms below (`npm run sheet`, …) mean whichever form you picked.
 
 - **Stage off camera, perform on camera.** Before each `record`, navigate to the start state,
@@ -469,20 +472,12 @@ Before handing over, make sure the reel folder reads on its own:
   own.
 
 Stop every server and container you started, then **slim the workspace**. The app copy and the
-installs are about 1 GB per reel and all rebuildable, so they shouldn't sit on disk:
+installs are about 1 GB per reel and all rebuildable, so they shouldn't sit on disk. Run
+`node <skill>/scripts/slim.mjs --ws <ws> --src <checkout> --dry-run`, read what it will save
+and remove, then run it again without `--dry-run`.
 
-```sh
-# work/slim-reel.sh, with absolute paths filled in
-export PROMO_WS=/Users/<you>/promo-reels/<app>-reel_<YYYY-MM-DD>/work
-export PROMO_SRC=/path/to/users/checkout
-sh <skill>/scripts/slim.sh "$@"
-```
-
-Run `sh /abs/path/work/slim-reel.sh --dry-run` and read what it will save and remove, then
-run `sh /abs/path/work/slim-reel.sh`.
-
-It saves what makes the app copy unique (`app.commit`, `app.patch`, the copy's `.env` files) and
-writes `rebuild-app.sh`. Then it removes `app/`, `studio/node_modules`, `studio/out`, logs and
+It saves what makes the app copy unique (`app.commit`, its edits, the copy's `.env` files) and
+writes `rebuild-app.mjs`. Then it removes `app/`, `studio/node_modules`, `studio/out`, logs and
 stale login states, through the guard. It keeps the studio source, every `promo.json`, the
 captures and the scripts, which is everything a spot fix needs. A reel ends up at tens of MB.
 
@@ -491,9 +486,9 @@ Write the re-cut instructions into the README to match:
 - **Copy, timing, zoom or look:** `npm ci --prefix work/studio`, edit the `promo.json`, check
   with `npm run sheet --prefix work/studio`, then `npm run render --prefix work/studio` back to
   the top. That's about a minute, with no app needed.
-- **New footage:** `sh work/rebuild-app.sh`, then `sh work/setup.sh`, then re-run the shot.
+- **New footage:** `node work/rebuild-app.mjs`, then the setup script, then re-run the shot.
 
 Then give the user the command to open the video (`open`, `xdg-open` or `start` with the
-MP4's absolute path; see `agent-environments.md`). Report the reel folder's path, each
+MP4's absolute path; see `environments.md`). Report the reel folder's path, each
 file's length and resolution, the shot list as it ended up, and that the data shown is demo
 data.

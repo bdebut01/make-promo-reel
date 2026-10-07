@@ -119,7 +119,7 @@ simpler. Storyboard, capture and compose stay the same.
    to. For an owned artifact, save the page and its published files at their published paths.
    Don't film the claude.ai URL itself. It shows claude.ai's own chrome and needs the user's
    login.
-2. **Serve it locally:** `python3 -m http.server <port> --directory <ws>/app`, on a port that
+2. **Serve it locally:** `node <skill>/scripts/serve.mjs <ws>/app <port>`, on a port that
    isn't in use, in the background, as for an app. Loading the HTML from `file://` breaks
    relative fetches and some fonts.
 3. **Prove it renders** with a screenshot, as in step 2. Some artifacts depend on their type's

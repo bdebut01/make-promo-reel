@@ -1,0 +1,7 @@
+# Keep LF line endings on every OS, so a Windows checkout doesn't turn the bash script and
+# YAML into CRLF (bash then fails with "$'\r': command not found").
+* text=auto eol=lf
+*.gif binary
+*.png binary
+*.jpg binary
+*.mp3 binary

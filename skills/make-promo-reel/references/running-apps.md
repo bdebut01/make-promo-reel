@@ -6,20 +6,21 @@ first. These notes cover what they tend to leave out.
 
 ## General
 
-- **Ports:** check what's already listening (`lsof -iTCP -sTCP:LISTEN -n -P`) and pick unused
-  ones. The user's dev servers on the default ports are theirs.
-- **Background processes:** start each process with its logs going to a file
-  (`> /abs/path/work/logs/web.log 2>&1`, using Bash's background option rather than a trailing
-  `&`, `nohup` or `setsid`: the sandbox won't let a later command kill a detached process, so
-  it would outlive the reel and hold its port) and record its PID in `notes.md`, so you can stop exactly what you started. If starting
-  it takes env vars or several steps, put them in `work/start.sh` and run that.
+`<skill>/scripts/port.mjs` handles ports the same way on macOS, Linux and Windows:
+`free <port>`, `wait <port> [path]`, `who <port>` and `stop <port>`.
+
+- **Ports:** pick ones nothing listens on (`port.mjs free 8123`). The user's dev servers on the
+  default ports are theirs.
+- **Background processes:** start each process as a background task with its log going to a
+  file under `work/logs/` (see `environments.md`; never a trailing `&`, `nohup` or `setsid`),
+  and record its port in `notes.md`, so you can stop exactly what you started. If starting it
+  takes env vars or several steps, put them in a start script and run that.
 - **Stopping servers:** `uv run`, `npm run`, `poetry run` and `bundle exec` are wrappers. Killing
-  the recorded PID can leave the real server alive and still listening, so a "restarted"
-  server is the old one. Stop by port instead: run `lsof -tiTCP:<port> -sTCP:LISTEN`, then
-  `kill` the PIDs it prints, typed out (`$(…)` in the command gets a permission prompt), or keep
-  both steps in a `work/stop.sh`. Check the port is free before starting again.
-- **Readiness:** poll with `curl -s -o /dev/null -w '%{http_code}'` until you get a 200 (or a 302
-  to login). Don't sleep a fixed time.
+  the wrapper's PID can leave the real server alive and still listening, so a "restarted"
+  server is the old one. Stop by port instead (`port.mjs stop 8123`), which waits until the
+  port is free. Only stop ports you started and recorded.
+- **Readiness:** `port.mjs wait 8123` polls until the server answers (a 200, or a redirect to
+  login). Don't sleep a fixed time.
 - **Asset servers:** many stacks run a second process for CSS and JS (Vite, webpack,
   tailwind --watch). If the screenshot looks unstyled, a missing asset server or an unbuilt
   bundle is the usual cause. A one-off production build of the assets is often simpler than a
@@ -28,9 +29,9 @@ first. These notes cover what they tend to leave out.
   services. `openApp` blocks common analytics hosts by default (`blockAnalytics`), so demo
   sessions don't land in the product's stats. CDN scripts are fine to load. If something must
   not leave the machine, `context.route()` can serve it from a local copy.
-- **Editing env files in the copy:** env files often lack a trailing newline, so `>>` glues the
-  new line onto the last one (`X=FalseMESSAGING_ENABLED=True`). Append with
-  `printf '\nKEY=value\n' >> .env`, then read the file back.
+- **Editing env files in the copy:** env files often lack a trailing newline, so appending glues
+  the new line onto the last one (`X=FalseMESSAGING_ENABLED=True`). Start what you append with
+  a newline, or edit the file directly, then read it back.
 - **Feature flags:** note which filmed features are behind flags, and turn them on in the copy
   only. Tell the user which were off by default.
 - **Secrets:** never use production keys or credentials in the copy, even read-only ones: a
@@ -55,7 +56,8 @@ first. These notes cover what they tend to leave out.
 - On Apple Silicon, `uv sync` can pick an x86_64 interpreter (for example a Homebrew build under
   Rosetta), and then packages like `cryptography` fall back to slow or failing source builds.
   `uv sync --managed-python --python <version>` gets a native one.
-- `uv sync` if there's a `uv.lock`, else `python -m venv .venv && .venv/bin/pip install -r requirements.txt`.
+- `uv sync` if there's a `uv.lock`, else `python -m venv .venv`, then
+  `.venv/bin/pip install -r requirements.txt` (`.venv\Scripts\pip` on Windows).
 - **Django:** check `settings` for how the database is chosen (often `DATABASE_URL` or `DB_*`
   env vars, or a SQLite path relative to `BASE_DIR`, which in the copy is already separate).
   Then `migrate`, the project's fixture and seed commands, and `createsuperuser --noinput` with
