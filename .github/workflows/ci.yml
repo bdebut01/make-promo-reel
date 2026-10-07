@@ -30,8 +30,15 @@ jobs:
           echo "description: $len chars"; [ "$len" -le 1024 ]
       - name: JSON files parse
         run: for f in $(git ls-files '*.json'); do node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" || exit 1; done
-      - name: No machine-specific paths
-        run: "! git grep -nE '/Users/[a-z]|/home/[a-z]|Desktop/cs' -- ':!CONTRIBUTING.md' ':!README.md' | grep -v '/Users/<you>'"
+      - name: No personal paths in committed files
+        run: |
+          # A real home folder (/Users/<name>/, /home/<name>/, C:\Users\<name>) means a path from
+          # someone's machine slipped in. Placeholders like /Users/<you>/ are fine. README.md is
+          # skipped for its example permission rule.
+          if git grep -nE '/(Users|home)/[A-Za-z0-9._-]+/|[A-Za-z]:\\Users\\[A-Za-z0-9._-]+' -- ':!README.md'; then
+            echo "Replace personal paths with placeholders like /Users/<you>/ or <skill>/"
+            exit 1
+          fi
       - name: Template typechecks and synthesizes sounds
         working-directory: skills/make-promo-reel/template
         run: |
