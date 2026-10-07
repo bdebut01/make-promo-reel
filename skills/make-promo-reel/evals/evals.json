@@ -108,7 +108,7 @@
         "Duration is within 17–23 seconds",
         "The user's <app> checkout is unchanged",
         "No servers left listening on the run's assigned port range",
-        "The design system was read with the Artifact tool (project/README.md and project/tokens.json), not WebFetch/curl, and nothing was published to it",
+        "The design system was read with Claude's Artifact tool when the session has it (project/README.md and project/tokens.json), never fetched with curl or a web fetch; without the tool, the agent asked the user for an export. Nothing was published to it",
         "promo.json brand colors (background, primary, accent, text) come from the design system's tokens, not the app's CSS",
         "Headline and caption fonts are the design system's families, loaded and visible on the sheet",
         "Frame radius and shadow follow the design system's tokens",

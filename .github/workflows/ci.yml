@@ -21,13 +21,14 @@ jobs:
         run: shellcheck -S error skills/make-promo-reel/scripts/*.sh skills/make-promo-reel/scripts/box skills/make-promo-reel/tests/*.sh
       - name: Guard refuses what it should
         run: sh skills/make-promo-reel/tests/guard-test.sh
-      - name: Skill frontmatter
+      - uses: astral-sh/setup-uv@v6
+      - name: Valid skill (Agent Skills spec validator)
+        run: uvx --from "git+https://github.com/agentskills/agentskills#subdirectory=skills-ref" skills-ref validate skills/make-promo-reel
+      - name: SKILL.md stays under 500 lines
         run: |
-          f=skills/make-promo-reel/SKILL.md
-          head -1 "$f" | grep -qx -- '---'
-          grep -q '^name: make-promo-reel$' "$f"
-          len=$(grep '^description: ' "$f" | head -1 | sed 's/^description: //' | wc -c)
-          echo "description: $len chars"; [ "$len" -le 1024 ]
+          n=$(wc -l < skills/make-promo-reel/SKILL.md)
+          echo "SKILL.md: $n lines"
+          [ "$n" -lt 500 ] || { echo "::warning file=skills/make-promo-reel/SKILL.md::$n lines; the spec recommends under 500. Move detail into references/."; }
       - name: JSON files parse
         run: for f in $(git ls-files '*.json'); do node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" || exit 1; done
       - name: No personal paths in committed files

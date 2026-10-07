@@ -1,7 +1,7 @@
 #!/bin/sh
 # Refuses to let a destructive step touch anything outside the promo workspace.
 #
-#   export PROMO_WS=<reels>/<app>-reel_<MM-DD-YY>/work   # the workspace
+#   export PROMO_WS=<reels>/<app>-reel_<YYYY-MM-DD>/work   # the workspace
 #   export PROMO_SRC=/path/to/the/users/checkout    # the user's own repo: never a target
 #   sh <skill>/scripts/guard.sh app/db.sqlite3 app/media || exit 1
 #   rm -f app/db.sqlite3 ...

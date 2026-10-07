@@ -18,7 +18,7 @@ sometimes both:
 When both an app and a design source define a look, **the design source wins and the app fills
 the gaps.** Take colors, fonts, radius and art from the source. Take what it doesn't define
 (often the logo, the app's illustrations and always the demo world's photos) from the app, as
-SKILL.md step 6 describes. A user who hands over a design system is saying "this is the
+"Harvesting the app's own look" below describes. A user who hands over a design system is saying "this is the
 brand now". It's often newer than the app's CSS, as with a rebrand that hasn't shipped yet.
 Put any real conflicts on the storyboard's Look line: "colors and Fraunces from the design
 system (the app still uses Inter); logo from the app". The user may want to keep part of the
@@ -31,8 +31,10 @@ in `notes.md`.
 
 ### A claude.ai artifact link
 
-Read it with the Artifact tool's `read` action, never with WebFetch or curl. The link is a
-private page behind a login, and `read` is the way in.
+This needs Claude's Artifact tool. Read the link with the tool's `read` action, never with a
+web fetch or curl: it's a private page behind a login, and `read` is the way in. Without the
+tool, ask the user to export what you need (the HTML, `tokens.json`, font files and the logo)
+and treat those as files.
 
 - **The user owns it, or can edit it** (the result header says "writer"): `read` returns the
   raw HTML and names the saved file that holds the full page. List its published files with
@@ -159,8 +161,8 @@ Sort what arrives by where it goes:
 | Brand guide, screenshots of the marketing site | reference only: read them for colors, fonts and voice, but don't put them on screen |
 | Mood references (film stills, mood boards, inspiration) | reference only: let them steer the background tint, glow, lighting and composition of the graphics, and name what you took from them on the Look line. Never on screen. |
 
-- **Supplied art is current by definition.** The step 6 check ("use art the app currently
-  shows") is about telling live repo art from retired repo art. It doesn't apply to art the
+- **Supplied art is current by definition.** The harvest check ("use art the app currently
+  shows", below) is about telling live repo art from retired repo art. It doesn't apply to art the
   user just handed over. If it clashes with what the app shows, say so on the storyboard's Look
   line and use the supplied art.
 - **Supplied photos follow `demo-data.md`.** One coherent world matters as much as it does for
@@ -185,3 +187,26 @@ Sort what arrives by where it goes:
   subject. Check the logo reads on the mood's background, and use the variant that does.
   Check each one on the contact sheet. An image that looked fine on its own can be the wrong
   fit for the video.
+
+## Harvesting the app's own look
+
+With nothing supplied, or for whatever a design source leaves out, take the look from the app
+itself, into `studio/public/`:
+
+- **Name and logo:** look in `static/`, `public/`, `assets/` and favicons. A PNG or SVG with
+  transparency works best.
+- **Colors:** from the app's CSS variables or Tailwind config.
+- **Fonts:** find them in the app's CSS or Google Fonts links, put the woff2 files in
+  `public/fonts/`, then set `brand.fonts` and `brand.headlineFont`.
+- **Illustrations and mascots:** use art the app **currently shows**. Asset folders keep
+  retired art long after a rebrand, so find what the live landing page and templates actually
+  reference (grep the templates for the file name), and prefer the most recently changed
+  (`git log -1 --format=%cr -- <file>`). If two candidates look current, ask. Use one as
+  `intro.art`.
+- **Content photos and people:** 8–12 of the demo world's pictures as `end.photos`, a mix of
+  items and faces. Fewer than 8 looks sparse. Bubbles are circles, so square-crop each one
+  around its subject (a face's crop keeps the whole face, not the center of a tall photo) and
+  look at them on the sheet.
+- **Fonts with one weight:** if the app bundles only one weight of its font, load the rest of
+  that family with `@remotion/google-fonts` in `theme.ts`. The family is what makes it look
+  like the app.

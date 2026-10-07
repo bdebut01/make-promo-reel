@@ -1,6 +1,8 @@
 ---
 name: make-promo-reel
-description: Make a short (10–30s) promo or teaser video for a web app from real screen recordings of the app in use, filled with believable demo data and finished with industry-standard motion graphics (browser or phone frame, a restrained payoff zoom, kinetic captions, a branded intro and CTA end card) built from the app's own fonts, art and photos, or steered by what the user supplies: a design system, HTML/CSS file or claude.ai artifact (which can also be filmed in place of an app, for a prototype or mockup reel), and their own logos, art and photos. Handles the whole pipeline — learning to run the app in isolation, seeding demo data, storyboarding, scripted Playwright capture, and Remotion rendering to MP4 in 16:9, 1:1 or 9:16. Use this whenever someone wants a promo, launch video, sizzle reel, product teaser, demo clip, app trailer, social video, Product Hunt or landing-page hero video, or "a quick video showing off the app", even if they don't say "promo".
+description: Make a short (10–30s) promo or teaser video for a web app from real screen recordings of the app in use, filled with believable demo data and finished with industry-standard motion graphics (browser or phone frame, a restrained payoff zoom, kinetic captions, a branded intro and CTA end card) built from the app's own fonts, art and photos, or steered by a design system, HTML/CSS file or design artifact the user supplies (which can also be filmed in place of an app, for a prototype or mockup reel) and their own logos, art and photos. Handles the whole pipeline — learning to run the app in isolation, seeding demo data, storyboarding, scripted Playwright capture, and Remotion rendering to MP4 or GIF in 16:9, 1:1 or 9:16. Use this whenever someone wants a promo, launch video, sizzle reel, product teaser, demo clip, app trailer, social video, README GIF, Product Hunt or landing-page hero video, or "a quick video showing off the app", even if they don't say "promo".
+license: MIT
+compatibility: Any agent that can run shell commands. Needs Node 20+, git, Python 3 and network access; Chromium through Playwright, or Docker where a sandbox blocks it. Written and tested in Claude Code.
 ---
 
 # App promo video
@@ -33,13 +35,9 @@ The capture and compositing are mechanical, and the bundled scripts handle most 
   and logs every cursor move and click, which the studio uses to draw the cursor and aim the
   zoom. The on-camera actions (`click`, `type`, `scrollBy`, `focus`, `hold`) move at a human
   pace.
-- `template/sheet.mjs`: renders a labeled contact sheet (one PNG of evenly spaced frames), so you
-  can look at the video without watching it. It also prints pacing warnings and, with music,
-  how the cuts sit on the beat.
-- `template/loudness.mjs`: measures a rendered cut's loudness and true peak against the
-  -14 LUFS social target.
-- `template/gif.mjs`: turns a rendered cut into a GIF with a palette made from the whole clip,
-  for a README or docs page where video doesn't autoplay.
+- `template/sheet.mjs`: a labeled contact sheet (one PNG of evenly spaced frames) to look at
+  instead of the video, with pacing warnings and a beat report. `loudness.mjs` checks a render
+  against the -14 LUFS social target; `gif.mjs` turns a render into a GIF.
 - `scripts/avatars.mjs`: initials-on-gradient profile pictures for demo people.
 - `template/sfx.mjs`: synthesizes the UI sound kits (clicks, keys, whoosh, chime, pops) on
   `npm install`. Nothing to find or license.
@@ -49,8 +47,7 @@ The capture and compositing are mechanical, and the bundled scripts handle most 
   colors (as hex), fonts, font files and radius, with suggested `brand` fields.
 - `scripts/guard.sh`: refuses any destructive target outside the workspace. See below.
 - `scripts/box`: runs a browser command in a Playwright Docker container that sees one folder,
-  for hosts where Chromium can't launch (the Claude Code sandbox). See "Where the browser runs"
-  in step 5.
+  for sandboxes where Chromium can't launch. See `references/agent-environments.md`.
 - `references/motion-language.md`: pacing, caption copy, mood presets and timing templates.
   Read it before storyboarding.
 - `references/running-apps.md`: per-stack notes on running an app in isolation. Read it during
@@ -58,19 +55,22 @@ The capture and compositing are mechanical, and the bundled scripts handle most 
 - `references/demo-data.md`: how to build a demo world that feels lived-in. Read it during
   step 3.
 - `references/design-sources.md`: using what the user supplies to steer the look. That's a
-  design system, HTML/CSS file or claude.ai artifact (as the look, or as the thing to film),
-  and logos, art, photos or headshots. Read it whenever the user supplies any of these.
+  design system, HTML/CSS file or design artifact (as the look, or as the thing to film), and
+  logos, art, photos or headshots. Read it whenever the user supplies any of these.
+- `references/agent-environments.md`: what changes in a sandboxed shell (like Claude Code's),
+  without background tasks or subagents, and with or without claude.ai artifact access. Read it
+  at the start if your shell is sandboxed or checks commands before running them.
 
 ## Workspace
 
 Each request gets one reel folder outside the app's repo, named for the app and the day it's
-made (`MM-DD-YY`), so the user's checkout is never touched. Reels live under `<reels>`: the
+made (`YYYY-MM-DD`), so the user's checkout is never touched. Reels live under `<reels>`: the
 folder in `$PROMO_REELS` if it's set (check once with `echo $PROMO_REELS`), else
-`~/promo-reels/`. If the session's sandbox can't write there, ask the user for a folder it can. The finished videos sit at the top,
-where the user will look, and everything that made them is tucked into `work/`:
+`~/promo-reels/`. The finished videos sit at the top, where the user will look, and everything
+that made them is tucked into `work/`:
 
 ```
-<reels>/<app>-reel_<MM-DD-YY>/       e.g. weekly-reel_10-01-26/
+<reels>/<app>-reel_<YYYY-MM-DD>/   e.g. weekly-reel_2026-10-01/
   <app>-reel-<cut>.mp4   the deliverables: weekly-reel-16x9.mp4, or named by use when
                          there are several (weekly-reel-landing-16x9.mp4, …-stories-9x16.mp4)
   README.md              per cut: format, length, shot list with captions, what's demo data,
@@ -92,32 +92,14 @@ where the user will look, and everything that made them is tucked into `work/`:
 
 All of a reel's cuts share one `work/`: one app copy, one studio, one set of captures, and a
 `promo-<cut>.json` per cut. Use the app's short name in lowercase (`acmecrm`, not `Acme CRM`).
-A second reel of the same app on the same day gets a `-2` suffix (`weekly-reel_10-01-26-2`).
+A second reel of the same app on the same day gets a `-2` suffix (`weekly-reel_2026-10-01-2`).
 If the user names another location, use that, as long as it isn't inside the app's checkout.
 Keep `notes.md` current as you learn things, and once the app runs, put the commands that
 worked into `setup.sh`, so a later re-film is one command.
 
-**Write every Bash command so it can be checked before it runs.** In Claude Code, it reads a
-command's text to decide whether it stays inside the allowed folders. It can't do that for
-anything the shell works out at run time: `$VAR`, `${…}`, `$(…)`, backticks, `~`, `export`,
-globs in a target path, or a `cd … &&` prefix. Such commands get a permission prompt even when
-every path really is inside the allowed folders. This is a long, many-command job, so those prompts
-pile up. So:
-
-- **Spell out absolute paths.** Expand `~` and the date yourself once (`date +%m-%d-%y`), and
-  from then on type the reel's full path, like
-  `/Users/<you>/promo-reels/weekly-reel_10-01-26/work`, and `<skill>` as its full
-  path too.
-- **Put shell logic in a script file.** Variables, `$(…)`, loops, `export`, PIDs looked up by
-  port: write them into a `.sh` file under `work/` with the Write tool, then run it as
-  `sh /abs/path/work/<name>.sh`. Claude Code checks the command, not what the script does, and
-  the script is reusable on the next take.
-- **Don't rely on `cd`.** The working directory doesn't reliably carry over to the next Bash
-  call, so point each command at its folder instead: `box`'s folder argument,
-  `npm run <script> --prefix /abs/app`, `git -C /abs/app …`, or absolute paths as arguments. A `cd`
-  inside a script file is fine.
-- **Look up, then act.** Instead of `kill $(lsof -ti…)`, run the lookup, read the PID, and run
-  `kill 48213`. Or put both steps in a script.
+**In a sandboxed shell,** spell out absolute paths and put shell logic in script files, so
+each command can be checked before it runs; `references/agent-environments.md` explains why and
+how. It matters here because a reel takes a few hundred commands.
 
 **Guard every destructive step.** Resetting the copy is routine: deleting its database, wiping
 its media, dropping or flushing a database, `docker compose down -v`. The one thing that must
@@ -127,8 +109,8 @@ call it from a script that sets them, never from a one-line `export … &&` comm
 reset script the place for this:
 
 ```sh
-# work/reset.sh: run as  sh /Users/<you>/promo-reels/<app>-reel_<MM-DD-YY>/work/reset.sh
-export PROMO_WS=/Users/<you>/promo-reels/<app>-reel_<MM-DD-YY>/work
+# work/reset.sh: run as  sh /Users/<you>/promo-reels/<app>-reel_<YYYY-MM-DD>/work/reset.sh
+export PROMO_WS=/Users/<you>/promo-reels/<app>-reel_<YYYY-MM-DD>/work
 export PROMO_SRC=/path/to/users/checkout
 cd "$PROMO_WS"
 sh <skill>/scripts/guard.sh app/db.sqlite3 app/media || exit 1   # files and folders
@@ -158,7 +140,7 @@ running. A running URL works, but it limits seeding to what the UI can create, a
 write data into a shared or production instance.
 
 With no app at all, a design can be the subject instead: a prototype, mockup or landing page
-given as an HTML file or a claude.ai artifact (see question 5).
+given as an HTML file or a design artifact such as a claude.ai page (see question 5).
 
 Then ask the rest in **one round**, each with a default the user can just accept:
 
@@ -184,7 +166,7 @@ Then ask the rest in **one round**, each with a default the user can just accept
    library's own sources; anything else, the user decides on licensing.
 5. **Anything to steer the look?** Optional, and the default is "no, use what's in the app".
    Offer two kinds, which can come together:
-   - **A design source:** a claude.ai Design System or other artifact link, an HTML file, a
+   - **A design source:** a design system (a claude.ai Design System link, for one), an HTML file, a
      CSS or tokens file, or a folder of these. It sets the colors, fonts, radius, logo and
      art, and where it disagrees with the app, the design source wins.
    - **Media:** a logo, mascot or illustrations, product or lifestyle photos, headshots for
@@ -217,7 +199,7 @@ Read what the project says about itself first: README, AGENTS.md or CLAUDE.md, C
 1. **Make a disposable copy.** If the checkout isn't on its main branch, or is behind its
    remote, ask which state to film (the checked-out branch, or `main` / `origin/main`): a
    promo should usually show what users can actually use. Run
-   `git clone --local <path> <ws>/app` for that state. If the sandbox refuses it (writing
+   `git clone --local <path> <ws>/app` for that state. If a sandbox refuses it (writing
    `.git/config` or hooks is often denied), export that commit instead. Write the commit hash to
    `<ws>/app.commit`, then run `git -C <path> archive <commit>`, piped into `tar -x -C <ws>/app`,
    from a script file. `git archive` only reads the checkout, and `slim.sh` handles a copy
@@ -232,12 +214,12 @@ Read what the project says about itself first: README, AGENTS.md or CLAUDE.md, C
    servers aren't using. Point outbound email, payments and SMS at console/test backends, so
    seeding never sends anything real. Never use production keys or credentials, for anything,
    even read-only: the copy runs on local values and test-mode keys only.
-3. **Install and start it** with the Bash tool's own background option (`run_in_background`),
-   logging to a file, and poll until it answers with a 200. Don't detach it with `nohup`,
-   `&` or `setsid`. Inside the sandbox, a later command can't signal a process an earlier one
-   detached, so it can't be stopped, and it holds its port after you're gone. A background
-   task can always be stopped. Record each server's port and task in `notes.md`, and stop them
-   all before handing over.
+3. **Install and start it** as a background task your agent can stop later (in Claude Code,
+   the Bash tool's `run_in_background`), logging to a file, and poll until it answers with a
+   200. Don't detach it with `nohup`, `&` or `setsid`: in a sandbox, a later command can't stop
+   a detached process, and it holds its port after you're gone. Record each server's port and
+   task in `notes.md`, and stop them all before handing over. `agent-environments.md` covers
+   agents without background tasks.
 4. **Prove it renders.** Take a Playwright screenshot of the main screen and look at it. Missing
    CSS or fonts, a dev asset server that isn't running, a debug toolbar, a framework dev overlay
    or a cookie banner will all end up in the video. Fix them now, preferably with a production
@@ -343,34 +325,13 @@ Set up the studio: copy `template/` to `<ws>/studio` and copy `scripts/capture.m
 `avatars.mjs` if needed) into it. Write `studio/shots.mjs` with one `app.record(name, d => …)`
 per shot. The header of `capture.mjs` shows the API.
 
-**Where the browser runs.** Capture, contact sheets and rendering all launch Chromium. Pick
-one way to run them, once, and use it for the whole reel:
-
-- **On the host,** when Chromium can launch there (no sandbox, or one that allows it). Run
-  `npm install --prefix /abs/studio` (which also synthesizes the sound kits) and
-  `npx --prefix /abs/studio playwright install chromium`, then the scripts directly:
-  `npm run shots --prefix /abs/studio`.
-- **In `box`,** when it can't. Chromium can't launch inside the Claude Code sandbox, and
-  `<skill>/scripts/box` runs it in a Playwright container (Docker) that sees only the studio
-  folder. Don't install on the host: the first `box` run installs a Linux `node_modules`, and
-  the image already has Chromium. `<box>` is the script's absolute path:
-
-  - `<box> --port <app port> /abs/studio -- npm run shots` (`--port` lets the page reach the
-    app's dev server on `localhost`)
-  - `<box> /abs/studio -- npm run frames -- <shot>`
-  - `<box> /abs/studio -- npm run sheet`
-  - `<box> /abs/studio -- npm run render -- out/<name>.mp4`
-  - `<box> /abs/studio -- node avatars.mjs public/avatars "Maya Chen" …`
-
-  The box mounts only folders under `<reels>`, `$TMPDIR`, Claude's temp folder or
-  `$BOX_ROOTS`, so everything these scripts read or write must be inside the studio: render
-  into `studio/out/`, then copy the MP4 to the reel folder with a plain `cp`. The command starts
-  with the absolute `box` path and takes plain arguments: no `cd … &&`, pipes, `$(…)` or `;`,
-  or it prompts and runs in the sandbox, where Chromium fails. If Chromium fails to launch,
-  check that spelling before blaming the settings.
-
-The short forms below (`npm run sheet`, …) mean whichever form you picked. To test the host,
-run `npm run frames` once after the first capture, or a one-line Playwright screenshot.
+**Where the browser runs.** Capture, contact sheets and rendering all launch Chromium. By
+default, run them on the host: `npm install --prefix /abs/studio` (which also synthesizes the
+sound kits), `npx --prefix /abs/studio playwright install chromium`, then
+`npm run shots --prefix /abs/studio`. If Chromium can't launch there, as inside Claude Code's
+sandbox, run every one of them through `<skill>/scripts/box` instead, as
+`references/agent-environments.md` describes. Pick one way after the first capture and keep it
+for the whole reel. The short forms below (`npm run sheet`, …) mean whichever form you picked.
 
 - **Stage off camera, perform on camera.** Before each `record`, navigate to the start state,
   scroll into place and dismiss banners. Inside `record`, do only the moment itself: every second
@@ -425,26 +386,11 @@ Write `studio/public/promo.json`. The example in the template and `src/types.ts`
   source's colors, fonts, radius, logo and art go into `brand`, `intro.art` and
   `studio/public/`, and supplied media fills `brand.logo`, `intro.art` and `end.photos`
   (`design-sources.md` covers reading each kind). Then fill whatever they leave out from the
-  app, as below. With nothing supplied, harvest the app's design language into
-  `studio/public/`, and don't fall back to a preset's look:
-  - **Name and logo:** look in `static/`, `public/`, `assets/` and favicons. A PNG or SVG with
-    transparency works best.
-  - **Colors:** from the app's CSS variables or Tailwind config.
-  - **Fonts:** find them in the app's CSS or Google Fonts links, put the woff2 files in
-    `public/fonts/`, then set `brand.fonts` and `brand.headlineFont`.
-  - **Illustrations and mascots:** use art the app **currently shows**. Asset folders keep
-    retired art long after a rebrand, so find what the live landing page and templates actually
-    reference (grep the templates for the file name), and prefer the most recently changed
-    (`git log -1 --format=%cr -- <file>`). If two candidates look current, ask. Use one as
-    `intro.art`.
-  - **Content photos and people:** 8–12 of the demo world's pictures as `end.photos`, a mix of
-    items and faces. Fewer than 8 looks sparse. Bubbles are circles, so square-crop each one
-    around its subject (a face's crop keeps the whole face, not the center of a tall photo) and
-    look at them on the sheet.
-
-  - **Fonts with one weight:** if the app bundles only one weight of its font, load the rest of
-    that family with `@remotion/google-fonts` in `theme.ts`. The family is what makes it look
-    like the app.
+  app. With nothing supplied, harvest the app's design language into `studio/public/`, and
+  don't fall back to a preset's look:
+  name and logo, colors, fonts (all weights of the family), the art the app **currently**
+  shows, and 8–12 content photos for the end card. "Harvesting the app's own look" in
+  `design-sources.md` says where to find each one and the traps.
 
   Then pick the look and the feel separately. The mood sets the background, type and frame.
   `motion` (`gentle`, `bouncy` or `snappy`) sets how things move, so a light `clean` look can
@@ -483,8 +429,8 @@ Write `studio/public/promo.json`. The example in the template and `src/types.ts`
   - the total length (printed) is within the target
   - no `PACING WARNING` lines were printed. They flag an intro or end card under 2.0s, a
     caption lead-in under 0.8s, a shot sped past 1.2×, or a cut longer than `maxSeconds` (set it
-    to the user's cap). Fix each one before rendering; to
-    find the time, cut a moment rather than squeezing the floors.
+    to the user's cap). Fix each one before rendering; to find the time, cut a moment
+    rather than squeezing the floors.
 - **A second pair of eyes,** when the session can start subagents: once the sheet looks right
   to you, have three reviewers look at `out/sheet.png`, `promo.json` and the storyboard in
   parallel, each for one thing: **readability** (caption size and contrast, nothing under
@@ -492,46 +438,13 @@ Write `studio/public/promo.json`. The example in the template and `src/types.ts`
   caption be read before the action, does every shot land one benefit), and **brand** (does it
   look like this product, not the preset). Each returns a short list of fixes. Apply the ones
   you agree with and re-run the sheet. Skip this for a quick re-cut.
-- **Sound:** set `"sfx": { "kit": "auto" }` to place synthesized UI sounds on the capture's own
-  events: a click per click, a key per typed character, a whoosh on each cut, a chime on the
-  payoff (the shot's last `d.focus`) and pops as the end-card bubbles land. `auto` picks the kit
-  from the mood (`soft` for clean, `round` for playful, `crisp` for bold-dark), and `"volume"`
-  scales the whole kit. Keystrokes only exist in captures made after keystroke logging was
-  added, so older captures get clicks without typing. Use `"sfx": false` for a cut that will
-  autoplay muted anyway.
-- **Music:** pick a bed from the library to match the mood and the use's energy (`calm` for a
-  landing or feed cut, `lively` for Stories and launch), seeded by the app's name so re-renders
-  keep the same track:
-
-  ```sh
-  node <skill>/scripts/music.mjs pick --mood <mood> --energy <calm|medium|lively> \
-    --seconds <length> --seed <app> --out <ws>/studio/public
-  ```
-
-  Paste the printed `"music"` block into `promo.json`. It carries a per-track `volume`, so beds
-  sit at the same level under the effects, and a `startAt` that skips any quiet intro. Name the
-  track on the storyboard's Look line so the user can swap it (`--track <id>`; `music.mjs list`
-  shows all ten). For beat-matched cuts, make scene lengths whole multiples of the printed beat.
-  With a `bpm` in the music block, `npm run sheet` prints the spacing between cuts in beats;
-  nudge `trim` or `duration` until it reads whole numbers. It knows the tempo, not where the
-  downbeat falls, so listen to the first cut once.
-  Record the track and its license in the reel's README. The license requires no attribution,
-  but it's what makes the reel's music traceable.
-- **Render, then copy to the reel folder:**
-  `npm run render -- out/<app>-reel-16x9.mp4`, then
-  `npm run loudness -- out/<app>-reel-16x9.mp4`, then
-  `cp /abs/studio/out/<app>-reel-16x9.mp4 /abs/reel/`. The loudness check wants about -14 LUFS
-  with true peak under -1 dBTP, which is where social platforms normalize. When it fails, it
-  prints a factor: scale `music.volume` and `sfx.volume` by it and render again. In the box, Remotion uses the image's
-  Chromium (`remotion.config.ts` and `sheet.mjs` read `$CHROME`). For another aspect ratio,
-  write `promo-9x16.json` with the new `width`/`height` (and mobile clips) and run
-  `npm run render -- out/<app>-reel-9x16.mp4 --props=public/promo-9x16.json`.
-- **A GIF** (a README, docs, an issue): render the MP4 first, then
-  `npm run gif -- out/<app>-reel-16x9.mp4 out/<app>-reel.gif 800 15`. Don't use Remotion's own
-  `--codec=gif`: the template's quality settings don't apply to it, and its palette is worse. A
-  GIF has no sound, so set `"sfx": false` and `"music": null` for that cut, and keep it to about
-  10s. The script prints the size: GitHub shows GIFs up to 10 MB inline, ideally under 5 MB.
-  Shorten the cut first, then drop the fps to 12, then the width.
+- **Sound and music:** set `"sfx": { "kit": "auto" }` for UI sounds placed on the capture's own
+  clicks and keystrokes, and pick a bed with `scripts/music.mjs` to match the mood and the
+  use's energy. `references/sound-and-output.md` has the commands, levels and beat matching.
+  Use `"sfx": false` and `"music": null` for a cut that will autoplay muted, and for a GIF.
+- **Render, check, copy:** `npm run render -- out/<app>-reel-16x9.mp4`, then
+  `npm run loudness -- out/<app>-reel-16x9.mp4` (when it has sound), then `cp` it to the reel
+  folder. For other aspect ratios and for a GIF, see `sound-and-output.md`.
 
 The template is a starting point, not a cage. If the storyboard wants something the config can't
 express, such as a number counting up, a split screen or two clips side by side, edit the
@@ -560,7 +473,7 @@ installs are about 1 GB per reel and all rebuildable, so they shouldn't sit on d
 
 ```sh
 # work/slim-reel.sh, with absolute paths filled in
-export PROMO_WS=/Users/<you>/promo-reels/<app>-reel_<MM-DD-YY>/work
+export PROMO_WS=/Users/<you>/promo-reels/<app>-reel_<YYYY-MM-DD>/work
 export PROMO_SRC=/path/to/users/checkout
 sh <skill>/scripts/slim.sh "$@"
 ```
@@ -577,12 +490,10 @@ Write the re-cut instructions into the README to match:
 
 - **Copy, timing, zoom or look:** `npm ci --prefix work/studio`, edit the `promo.json`, check
   with `npm run sheet --prefix work/studio`, then `npm run render --prefix work/studio` back to
-  the top. That's about a minute, with no app
-  needed.
+  the top. That's about a minute, with no app needed.
 - **New footage:** `sh work/rebuild-app.sh`, then `sh work/setup.sh`, then re-run the shot.
 
-Then give the user the command to open the video (`! open /abs/path/<app>-reel-16x9.mp4` on
-macOS, `xdg-open` on Linux). Inside a sandbox, `open` is blocked, so running it yourself only
-fails or prompts. Report the reel folder's path, each
+Then give the user the command to open the video (`open`, `xdg-open` or `start` with the
+MP4's absolute path; see `agent-environments.md`). Report the reel folder's path, each
 file's length and resolution, the shot list as it ended up, and that the data shown is demo
 data.

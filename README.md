@@ -2,7 +2,7 @@
 
 ![make-promo-reel: ask for a promo in one prompt, get real footage of your app cut as a launch video](assets/make-promo-reel.gif)
 
-An [Agent Skill](https://docs.claude.com/en/docs/claude-code/skills) that turns a web app into a
+An [Agent Skill](https://agentskills.io) that turns a web app into a
 10–30 second promo video: real screen recordings of the app in use, filled with believable demo
 data, finished with SaaS-launch-style motion graphics, and rendered to MP4.
 
@@ -49,8 +49,23 @@ prototype or mockup (an HTML file) when there's no app yet.
 npx skills add bdebut01/make-promo-reel
 ```
 
-**By hand**: copy `skills/make-promo-reel/` into `~/.claude/skills/` (personal) or
-`.claude/skills/` (one project).
+**By hand**: copy `skills/make-promo-reel/` into your agent's skills folder. For Claude Code
+that's `~/.claude/skills/` (personal) or `.claude/skills/` (one project); other agents
+document their own.
+
+### Which agents
+
+It follows the open [Agent Skills](https://agentskills.io) format, so any agent that loads
+`SKILL.md` skills and can run shell commands can use it. It was written and tested in
+**Claude Code**. A few steps work best there, and each has a fallback elsewhere
+(`references/agent-environments.md`):
+
+| Feature | In Claude Code | Elsewhere |
+|---|---|---|
+| Servers for the app copy | the Bash tool's background tasks | the agent's own background tasks, or a start script the user runs |
+| Browser inside a sandbox | `scripts/box` (Docker) | usually not needed: Chromium runs on the host |
+| Parallel review of the cut | subagents | one reviewer at a time |
+| claude.ai artifacts as a design source | Claude's Artifact tool | an exported HTML, tokens or font files |
 
 ## Requirements
 
@@ -64,9 +79,9 @@ npx skills add bdebut01/make-promo-reel
 
 No ffmpeg or other system-wide installs are needed: Remotion bundles its own.
 
-### Using it inside Claude Code's sandbox
+### Using it inside a sandbox (Claude Code and similar)
 
-Chromium can't start under the sandbox, so the skill uses `box`. To let it run without a prompt
+Chromium can't start inside Claude Code's sandbox on macOS, so the skill uses `box` there. To let it run without a prompt
 each time, allow the script in your settings (adjust the path to where the skill is installed):
 
 ```json
