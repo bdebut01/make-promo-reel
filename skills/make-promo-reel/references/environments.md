@@ -65,7 +65,8 @@ suggest they set `PROMO_REELS` to it.
 
 ### Run the browser in `playwright-docker`
 
-Chromium can't launch inside some sandboxes (Claude Code's on macOS, for one). `<skill>/scripts/playwright-docker`
+Chromium can't launch inside some sandboxes. Claude Code's optional sandbox on macOS denies the
+Mach service Chromium registers at startup (`bootstrap_check_in … Permission denied`). `<skill>/scripts/playwright-docker`
 runs the command in the official Playwright container (Docker) instead. The container sees only
 the folder you name, plus the network. It has to run outside the sandbox: the user lists it in
 `sandbox.excludedCommands` as `"<path> *"` (the README shows the settings). If it fails with

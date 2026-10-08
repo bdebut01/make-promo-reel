@@ -77,7 +77,8 @@ and CI runs their tests on all three.
 - **Chromium**, through one of:
   - the host: the skill runs `npx playwright install chromium` in its studio folder, or
   - **Docker**, via the bundled `scripts/playwright-docker` (macOS and Linux). You need this only when the
-    agent runs in a sandbox where Chromium can't launch, as in Claude Code's sandbox on macOS.
+    agent runs in a sandbox where Chromium can't launch, as with Claude Code's optional sandbox
+    turned on, on macOS.
     `playwright-docker` runs the browser in the official Playwright image and mounts only the one folder
     it's given.
 
@@ -85,8 +86,10 @@ No ffmpeg, Python or other system-wide installs are needed: Remotion bundles its
 
 ### Using it inside a sandbox (Claude Code and similar)
 
-Chromium can't start inside Claude Code's sandbox on macOS, so the skill uses
-`playwright-docker` there. The script needs Docker, so it has to run outside the sandbox. Add
+This only applies if you've turned on Claude Code's sandbox (`/sandbox`); without it, Chromium
+runs on the host and you can skip this section. On macOS the sandbox denies the Mach service
+Chromium registers at startup, so Chromium can't launch inside it, and the skill uses
+`playwright-docker` instead. The script needs Docker, so it has to run outside the sandbox. Add
 it to your user settings (`~/.claude/settings.json`, so it applies in every project), with the
 path to where the skill is installed:
 
