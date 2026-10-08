@@ -67,8 +67,10 @@ suggest they set `PROMO_REELS` to it.
 
 Chromium can't launch inside some sandboxes (Claude Code's on macOS, for one). `<skill>/scripts/playwright-docker`
 runs the command in the official Playwright container (Docker) instead. The container sees only
-the folder you name, plus the network. It runs outside the sandbox, so the user may need to
-allow it once. The README shows the permission rule.
+the folder you name, plus the network. It has to run outside the sandbox: the user lists it in
+`sandbox.excludedCommands` as `"<path> *"` (the README shows the settings). If it fails with
+"operation not permitted" on `~/.docker/config.json`, it ran inside the sandbox: check the
+command's spelling (below), then ask the user to check that entry and restart.
 
 Don't install on the host: the first `playwright-docker` run installs a Linux `node_modules` of its own, and
 the image already has Chromium. `<playwright-docker>` is the script's absolute path:

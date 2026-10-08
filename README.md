@@ -85,16 +85,32 @@ No ffmpeg, Python or other system-wide installs are needed: Remotion bundles its
 
 ### Using it inside a sandbox (Claude Code and similar)
 
-Chromium can't start inside Claude Code's sandbox on macOS, so the skill uses `playwright-docker` there. To let it run without a prompt
-each time, allow the script in your settings (adjust the path to where the skill is installed):
+Chromium can't start inside Claude Code's sandbox on macOS, so the skill uses
+`playwright-docker` there. The script needs Docker, so it has to run outside the sandbox. Add
+it to your user settings (`~/.claude/settings.json`, so it applies in every project), with the
+path to where the skill is installed:
 
 ```json
-{ "permissions": { "allow": ["Bash(/Users/you/.claude/skills/make-promo-reel/scripts/playwright-docker:*)"] } }
+{
+  "sandbox": {
+    "excludedCommands": ["/Users/you/.claude/skills/make-promo-reel/scripts/playwright-docker *"]
+  },
+  "permissions": {
+    "allow": ["Bash(/Users/you/.claude/skills/make-promo-reel/scripts/playwright-docker:*)"]
+  }
+}
 ```
 
-`playwright-docker` runs outside the sandbox, so it is its own fence: it mounts only folders under the
-reels folder, `$TMPDIR`, Claude's temp folder or `$PW_DOCKER_ROOTS`. Read `scripts/playwright-docker` before
-allowing it; it's short on purpose.
+- `excludedCommands` runs it outside the sandbox. Keep the trailing ` *`: an entry with the bare
+  path doesn't match a command that has arguments, so the script would still run sandboxed
+  and fail to reach Docker.
+- The `allow` rule skips the permission prompt on each run.
+- Restart Claude Code fully after changing either. Then check with
+  `<path>/playwright-docker "$TMPDIR" -- node --version`, which should print a Node version.
+
+`playwright-docker` runs outside the sandbox, so it is its own fence: it mounts only folders
+under the reels folder, `$TMPDIR`, Claude's temp folder or `$PW_DOCKER_ROOTS`. Read
+`scripts/playwright-docker` before allowing it; it's short on purpose.
 
 ## Configuration
 
