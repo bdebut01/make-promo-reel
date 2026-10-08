@@ -1,26 +1,26 @@
 #!/bin/bash
-# box: run a command in a Playwright container that sees one folder and the network.
+# playwright-docker: run a command in the official Playwright container that sees one folder and the network.
 #
-#   box [--port N]... [--env K=V]... <dir> -- <command...>
+#   playwright-docker [--port N]... [--env K=V]... <dir> -- <command...>
 #
 # For when Chromium can't launch on the host (the Claude Code sandbox blocks it). This runs
 # outside the sandbox and is the fence instead: only <dir> is mounted (at its own absolute
 # path), and <dir> must be inside one of the allowed roots: the promo-reels folder
 # ($PROMO_REELS, default ~/promo-reels), $TMPDIR, Claude's temp folder, and any extra
-# colon-separated folders in $BOX_ROOTS. No host env, keys or home folder go in.
+# colon-separated folders in $PW_DOCKER_ROOTS. No host env, keys or home folder go in.
 # Needs Docker. Keep this file short enough to read in one go.
 set -euo pipefail
 
-IMAGE="${BOX_IMAGE:-mcr.microsoft.com/playwright:v1.63.0-noble}"
+IMAGE="${PW_DOCKER_IMAGE:-mcr.microsoft.com/playwright:v1.63.0-noble}"
 ROOTS=("${PROMO_REELS:-$HOME/promo-reels}" "${TMPDIR:-/tmp}" "/private/tmp/claude-$(id -u)" "/tmp/claude-$(id -u)")
-# Split BOX_ROOTS on ":" without a here-string: bash needs a temp file for one, which a sandbox
+# Split PW_DOCKER_ROOTS on ":" without a here-string: bash needs a temp file for one, which a sandbox
 # can refuse.
 old_ifs=$IFS; IFS=:; set -f
-for r in ${BOX_ROOTS-}; do ROOTS+=("$r"); done
+for r in ${PW_DOCKER_ROOTS-}; do ROOTS+=("$r"); done
 set +f; IFS=$old_ifs
 sha() { if command -v shasum >/dev/null; then shasum; else sha1sum; fi; }
 
-die() { echo "box: $*" >&2; exit 2; }
+die() { echo "playwright-docker: $*" >&2; exit 2; }
 
 ports=(); opts=()
 while [ $# -gt 0 ]; do
@@ -33,7 +33,7 @@ while [ $# -gt 0 ]; do
     *)      break ;;
   esac
 done
-[ $# -ge 3 ] && [ "$2" = "--" ] || die "usage: box [--port N]... [--env K=V]... <dir> -- <command...>"
+[ $# -ge 3 ] && [ "$2" = "--" ] || die "usage: playwright-docker [--port N]... [--env K=V]... <dir> -- <command...>"
 
 dir=$(cd "$1" 2>/dev/null && pwd -P) || die "no such folder: $1"
 shift 2
@@ -43,20 +43,20 @@ for r in "${ROOTS[@]}"; do
   real=$(cd "$r" 2>/dev/null && pwd -P) || continue
   [[ "$dir/" == "$real"/* ]] && ok=1
 done
-[ -n "$ok" ] || die "$dir is outside the allowed roots (${ROOTS[*]}); add it to BOX_ROOTS"
+[ -n "$ok" ] || die "$dir is outside the allowed roots (${ROOTS[*]}); add it to PW_DOCKER_ROOTS"
 
 # A Linux node_modules of its own, so the host's macOS binaries are never mixed in.
 if [ -f "$dir/package.json" ]; then
-  vol="box-nm-$(printf '%s' "$dir" | sha | cut -c1-12)"
-  docker volume create --label "box.dir=$dir" "$vol" >/dev/null
+  vol="pw-docker-nm-$(printf '%s' "$dir" | sha | cut -c1-12)"
+  docker volume create --label "pw-docker.dir=$dir" "$vol" >/dev/null
   opts+=(-v "$vol:$dir/node_modules")
 fi
 
 # Drop node_modules volumes whose folder is gone (ended scratchpads, deleted workspaces).
-# Safe beside other boxes: a running box's folder exists, and a volume still in use won't remove.
-docker volume ls --filter label=box.dir --format '{{.Name}} {{.Label "box.dir"}}' |
+# Safe beside other runs: a running container's folder exists, and a volume still in use won't remove.
+docker volume ls --filter label=pw-docker.dir --format '{{.Name}} {{.Label "pw-docker.dir"}}' |
   while read -r v d; do
-    [ -d "$d" ] || { docker volume rm "$v" >/dev/null 2>&1 && echo "box: removed $v (folder gone: $d)" >&2; } || true
+    [ -d "$d" ] || { docker volume rm "$v" >/dev/null 2>&1 && echo "playwright-docker: removed $v (folder gone: $d)" >&2; } || true
   done
 
 # Inside: install node_modules when package files change, forward each --port to the
@@ -65,17 +65,17 @@ docker volume ls --filter label=box.dir --format '{{.Name}} {{.Label "box.dir"}}
 entry='
 set -e
 if [ -f package.json ]; then
-  # One install at a time when two boxes share a folder; the second waits, then skips.
-  exec 9>node_modules/.box-lock; flock 9
+  # One install at a time when two runs share a folder; the second waits, then skips.
+  exec 9>node_modules/.pw-docker-lock; flock 9
   h=$(cat package.json package-lock.json 2>/dev/null | sha1sum | cut -c1-40)
-  if [ "$(cat node_modules/.box-hash 2>/dev/null)" != "$h" ]; then
-    echo "box: npm install (Linux)" >&2
+  if [ "$(cat node_modules/.pw-docker-hash 2>/dev/null)" != "$h" ]; then
+    echo "playwright-docker: npm install (Linux)" >&2
     npm install --no-audit --no-fund --loglevel=error >&2
-    cat package.json package-lock.json 2>/dev/null | sha1sum | cut -c1-40 > node_modules/.box-hash
+    cat package.json package-lock.json 2>/dev/null | sha1sum | cut -c1-40 > node_modules/.pw-docker-hash
   fi
   exec 9>&-
 fi
-for p in $BOX_PORTS; do
+for p in $PW_DOCKER_PORTS; do
   node -e "const net=require(\"net\"),p=+process.argv[1];net.createServer(c=>{const u=net.connect(p,\"host.docker.internal\");c.pipe(u).pipe(c);u.on(\"error\",()=>c.destroy());c.on(\"error\",()=>u.destroy())}).listen(p)" "$p" &
 done
 CHROME=$(ls -d /ms-playwright/chromium_headless_shell-*/chrome-*/chrome-headless-shell 2>/dev/null | tail -1)
@@ -84,11 +84,11 @@ exec "$@"
 '
 
 pstr="${ports[*]-}"
-echo "box: $dir${pstr:+ (ports: $pstr)}" >&2
+echo "playwright-docker: $dir${pstr:+ (ports: $pstr)}" >&2
 exec docker run --rm -i --init --shm-size=2g \
   --add-host=host.docker.internal:host-gateway \
   -v "$dir:$dir" -w "$dir" \
-  -v box-cache:/root/.cache -v box-npm:/root/.npm \
-  -e BOX_PORTS="$pstr" \
+  -v pw-docker-cache:/root/.cache -v pw-docker-npm:/root/.npm \
+  -e PW_DOCKER_PORTS="$pstr" \
   ${opts[@]+"${opts[@]}"} \
-  "$IMAGE" sh -c "$entry" box "$@"
+  "$IMAGE" sh -c "$entry" playwright-docker "$@"

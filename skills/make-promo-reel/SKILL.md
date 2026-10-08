@@ -48,7 +48,7 @@ The capture and compositing are mechanical, and the bundled scripts handle most 
 - `scripts/guard.mjs`: refuses any destructive target outside the workspace. See below.
   `slim.mjs` shrinks a finished reel; `port.mjs` checks, waits on and stops the app's ports;
   `serve.mjs` serves a design folder to film. All plain Node, so they run on any OS.
-- `scripts/box`: runs a browser command in a Playwright Docker container that sees one folder,
+- `scripts/playwright-docker`: runs a browser command in a Playwright Docker container that sees one folder,
   for sandboxes where Chromium can't launch. See `references/environments.md`.
 - `references/motion-language.md`: pacing, caption copy, mood presets and timing templates.
   Read it before storyboarding.
@@ -332,7 +332,7 @@ per shot. The header of `capture.mjs` shows the API.
 default, run them on the host: `npm install --prefix /abs/studio` (which also synthesizes the
 sound kits), `npx --prefix /abs/studio playwright install chromium`, then
 `npm run shots --prefix /abs/studio`. If Chromium can't launch there, as inside Claude Code's
-sandbox, run every one of them through `<skill>/scripts/box` instead, as
+sandbox, run every one of them through `<skill>/scripts/playwright-docker` instead, as
 `references/environments.md` describes. Pick one way after the first capture and keep it
 for the whole reel. The short forms below (`npm run sheet`, …) mean whichever form you picked.
 

@@ -15,7 +15,7 @@ fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
 const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts") });
-const browserExecutable = process.env.CHROME || null; // box: the image's Chromium
+const browserExecutable = process.env.CHROME || null; // playwright-docker: the image's Chromium
 const composition = await selectComposition({ serveUrl, id: "Promo", browserExecutable });
 const last = composition.durationInFrames - 1;
 

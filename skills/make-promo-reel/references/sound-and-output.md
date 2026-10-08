@@ -36,7 +36,7 @@ Read this at step 6 of SKILL.md, once the contact sheet looks right.
   `npm run loudness -- out/<app>-reel-16x9.mp4`, then
   `cp /abs/studio/out/<app>-reel-16x9.mp4 /abs/reel/`. The loudness check wants about -14 LUFS
   with true peak under -1 dBTP, which is where social platforms normalize. When it fails, it
-  prints a factor: scale `music.volume` and `sfx.volume` by it and render again. In the box, Remotion uses the image's
+  prints a factor: scale `music.volume` and `sfx.volume` by it and render again. In the container, Remotion uses the image's
   Chromium (`remotion.config.ts` and `sheet.mjs` read `$CHROME`). For another aspect ratio,
   write `promo-9x16.json` with the new `width`/`height` (and mobile clips) and run
   `npm run render -- out/<app>-reel-9x16.mp4 --props=public/promo-9x16.json`.

@@ -63,7 +63,7 @@ It follows the open [Agent Skills](https://agentskills.io) format, so any agent 
 | Feature | In Claude Code | Elsewhere |
 |---|---|---|
 | Servers for the app copy | the Bash tool's background tasks | the agent's own background tasks, or a start script the user runs |
-| Browser inside a sandbox | `scripts/box` (Docker) | usually not needed: Chromium runs on the host |
+| Browser inside a sandbox | `scripts/playwright-docker` (Docker) | usually not needed: Chromium runs on the host |
 | Parallel review of the cut | subagents | one reviewer at a time |
 | claude.ai artifacts as a design source | Claude's Artifact tool | an exported HTML, tokens or font files |
 
@@ -76,24 +76,24 @@ and CI runs their tests on all three.
 - Whatever your app needs to run locally (its database, its language runtime).
 - **Chromium**, through one of:
   - the host: the skill runs `npx playwright install chromium` in its studio folder, or
-  - **Docker**, via the bundled `scripts/box` (macOS and Linux). You need this only when the
+  - **Docker**, via the bundled `scripts/playwright-docker` (macOS and Linux). You need this only when the
     agent runs in a sandbox where Chromium can't launch, as in Claude Code's sandbox on macOS.
-    `box` runs the browser in the official Playwright image and mounts only the one folder
+    `playwright-docker` runs the browser in the official Playwright image and mounts only the one folder
     it's given.
 
 No ffmpeg, Python or other system-wide installs are needed: Remotion bundles its own ffmpeg.
 
 ### Using it inside a sandbox (Claude Code and similar)
 
-Chromium can't start inside Claude Code's sandbox on macOS, so the skill uses `box` there. To let it run without a prompt
+Chromium can't start inside Claude Code's sandbox on macOS, so the skill uses `playwright-docker` there. To let it run without a prompt
 each time, allow the script in your settings (adjust the path to where the skill is installed):
 
 ```json
-{ "permissions": { "allow": ["Bash(/Users/you/.claude/skills/make-promo-reel/scripts/box:*)"] } }
+{ "permissions": { "allow": ["Bash(/Users/you/.claude/skills/make-promo-reel/scripts/playwright-docker:*)"] } }
 ```
 
-`box` runs outside the sandbox, so it is its own fence: it mounts only folders under the
-reels folder, `$TMPDIR`, Claude's temp folder or `$BOX_ROOTS`. Read `scripts/box` before
+`playwright-docker` runs outside the sandbox, so it is its own fence: it mounts only folders under the
+reels folder, `$TMPDIR`, Claude's temp folder or `$PW_DOCKER_ROOTS`. Read `scripts/playwright-docker` before
 allowing it; it's short on purpose.
 
 ## Configuration
@@ -102,8 +102,8 @@ allowing it; it's short on purpose.
 |---|---|---|
 | `PROMO_REELS` | `~/promo-reels` | Where reel folders are created. Never inside the app's checkout. |
 | `PROMO_MUSIC_CACHE` | `$PROMO_REELS/_music` | Where music beds are downloaded once and reused. |
-| `BOX_ROOTS` | (none) | Extra colon-separated folders `box` may mount. |
-| `BOX_IMAGE` | `mcr.microsoft.com/playwright:v1.63.0-noble` | The container image `box` runs. Keep its Playwright version in step with `template/package.json`. |
+| `PW_DOCKER_ROOTS` | (none) | Extra colon-separated folders `playwright-docker` may mount. |
+| `PW_DOCKER_IMAGE` | `mcr.microsoft.com/playwright:v1.63.0-noble` | The container image `playwright-docker` runs. Keep its Playwright version in step with `template/package.json`. |
 
 ## Safety
 

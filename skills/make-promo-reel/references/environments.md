@@ -21,7 +21,7 @@ one-liners: `guard.mjs`, `slim.mjs`, `port.mjs`, `serve.mjs`, and the studio's n
 - **The date** for the folder name: `node -p "new Date().toISOString().slice(0,10)"` works in
   any shell (`Get-Date -Format yyyy-MM-dd` in PowerShell).
 - **The browser** launches on the host, so install Chromium with
-  `npx --prefix <studio> playwright install chromium` and run the npm scripts directly. `box` is
+  `npx --prefix <studio> playwright install chromium` and run the npm scripts directly. `playwright-docker` is
   a bash script for macOS and Linux sandboxes and isn't needed here; under WSL it works as on
   Linux.
 - **Python apps** keep their virtualenv tools in `.venv\Scripts\`, not `.venv/bin/`, and the
@@ -54,7 +54,7 @@ commands, so those prompts pile up.
   The agent checks the command, not what the script does, and the script is reusable on the
   next take.
 - **Don't rely on `cd`.** The working directory doesn't reliably carry over to the next
-  command, so point each command at its folder instead: `box`'s folder argument,
+  command, so point each command at its folder instead: `playwright-docker`'s folder argument,
   `npm run <script> --prefix /abs/app`, `git -C /abs/app …`, or absolute paths as arguments. A
   `cd` inside a script file is fine.
 - **Look up, then act.** Instead of `kill $(lsof -ti…)`, use `port.mjs stop <port>`, or run
@@ -63,33 +63,33 @@ commands, so those prompts pile up.
 If the sandbox can't write to `~/promo-reels`, ask the user for a folder it can write to, and
 suggest they set `PROMO_REELS` to it.
 
-### Run the browser in `box`
+### Run the browser in `playwright-docker`
 
-Chromium can't launch inside some sandboxes (Claude Code's on macOS, for one). `<skill>/scripts/box`
+Chromium can't launch inside some sandboxes (Claude Code's on macOS, for one). `<skill>/scripts/playwright-docker`
 runs the command in the official Playwright container (Docker) instead. The container sees only
 the folder you name, plus the network. It runs outside the sandbox, so the user may need to
 allow it once. The README shows the permission rule.
 
-Don't install on the host: the first `box` run installs a Linux `node_modules` of its own, and
-the image already has Chromium. `<box>` is the script's absolute path:
+Don't install on the host: the first `playwright-docker` run installs a Linux `node_modules` of its own, and
+the image already has Chromium. `<playwright-docker>` is the script's absolute path:
 
-- `<box> --port <app port> /abs/studio -- npm run shots` (`--port` lets the page reach the
+- `<playwright-docker> --port <app port> /abs/studio -- npm run shots` (`--port` lets the page reach the
   app's dev server on `localhost`)
-- `<box> /abs/studio -- npm run frames -- <shot>`
-- `<box> /abs/studio -- npm run sheet`
-- `<box> /abs/studio -- npm run render -- out/<name>.mp4`
-- `<box> /abs/studio -- node avatars.mjs public/avatars "Maya Chen" …`
+- `<playwright-docker> /abs/studio -- npm run frames -- <shot>`
+- `<playwright-docker> /abs/studio -- npm run sheet`
+- `<playwright-docker> /abs/studio -- npm run render -- out/<name>.mp4`
+- `<playwright-docker> /abs/studio -- node avatars.mjs public/avatars "Maya Chen" …`
 
-The box mounts only folders under `<reels>`, `$TMPDIR`, Claude Code's temp folder or
-`$BOX_ROOTS`. Everything these scripts read or write must be inside the folder you pass: local
+The container mounts only folders under `<reels>`, `$TMPDIR`, Claude Code's temp folder or
+`$PW_DOCKER_ROOTS`. Everything these scripts read or write must be inside the folder you pass: local
 pages you film go in the studio, renders go to `studio/out/`, and then a plain `cp` moves the
 MP4 to the reel folder.
 
-**Spell every `box` command plainly.** Start with the absolute `box` path, and pass plain
+**Spell every `playwright-docker` command plainly.** Start with the absolute `playwright-docker` path, and pass plain
 arguments: no `$VAR`, `cd … &&`, pipes, `$(…)`, `;` or `&&`. Otherwise the agent treats it as a
 compound command, prompts, and may run it inside the sandbox, where Chromium and Docker both
 fail. For anything more, write a script into the folder and run
-`<box> /abs/studio -- sh /abs/studio/script.sh`. If Chromium fails to launch, check the
+`<playwright-docker> /abs/studio -- sh /abs/studio/script.sh`. If Chromium fails to launch, check the
 spelling before blaming the settings.
 
 ## Background processes

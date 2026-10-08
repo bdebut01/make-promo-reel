@@ -56,8 +56,8 @@ npx tsc               # typecheck
 - Plain Node ESM for scripts, with no dependencies beyond what `template/package.json` installs,
   so they run the same on macOS, Linux and Windows. Spawn programs with `execFileSync` and an
   argument list (never a shell string), build file URLs with `pathToFileURL`, and join paths
-  with `path`. `box` is the one bash script, because it only serves macOS and Linux sandboxes.
-- Pin versions. Playwright in `template/package.json` must match the `box` image tag.
+  with `path`. `playwright-docker` is the one bash script, because it only serves macOS and Linux sandboxes.
+- Pin versions. Playwright in `template/package.json` must match the `playwright-docker` image tag.
 - Anything that deletes goes through `guard.mjs`. A PR that weakens the guard needs a strong
   reason in its description, and a test in `tests/`.
 - Instructions shouldn't assume an OS. Prefer the Node scripts to shell one-liners; where a step
@@ -70,7 +70,7 @@ CI runs these checks. Run them locally:
 
 ```sh
 for f in $(git ls-files '*.mjs'); do node --check "$f"; done
-shellcheck -S error skills/make-promo-reel/scripts/box
+shellcheck -S error skills/make-promo-reel/scripts/playwright-docker
 node --test skills/make-promo-reel/tests/scripts.test.mjs
 (cd skills/make-promo-reel/template && npm install --ignore-scripts && npx tsc)
 ```

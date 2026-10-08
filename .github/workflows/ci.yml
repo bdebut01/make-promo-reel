@@ -13,10 +13,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: ShellCheck (box, the one bash script)
+      - name: ShellCheck (playwright-docker, the one bash script)
         run: |
-          bash -n skills/make-promo-reel/scripts/box
-          shellcheck -S error skills/make-promo-reel/scripts/box
+          bash -n skills/make-promo-reel/scripts/playwright-docker
+          shellcheck -S error skills/make-promo-reel/scripts/playwright-docker
       - uses: astral-sh/setup-uv@v6
       - name: Valid skill (Agent Skills spec validator)
         run: uvx --from "git+https://github.com/agentskills/agentskills#subdirectory=skills-ref" skills-ref validate skills/make-promo-reel

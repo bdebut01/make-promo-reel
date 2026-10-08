@@ -17,7 +17,7 @@ First public release.
   beats; an optional parallel review covers readability, pacing and brand.
 - Reels ship with an asset and license table, and optional post copy.
 - `npm run gif` makes a palette-optimized GIF from a rendered cut, for READMEs and docs.
-- Agent-neutral: SKILL.md describes capabilities, and Claude Code specifics (sandbox, `box`,
+- Agent-neutral: SKILL.md describes capabilities, and Claude Code specifics (sandbox, `playwright-docker`,
   background tasks, Artifact tool) live in `references/environments.md`. Frontmatter
   gains `license` and `compatibility`, and CI runs the Agent Skills validator.
 - Reel folders are dated `YYYY-MM-DD`.
@@ -29,5 +29,5 @@ First public release.
   `python3 -m http.server`; Python is no longer required. The template spawns Remotion's ffmpeg
   without `npx` and builds file URLs portably. `.gitattributes` keeps LF everywhere, and CI
   runs the script tests and template build on all three OSes.
-- `guard.sh` for destructive steps, `slim.sh` to shrink finished reels, and `box` to run
+- `guard.sh` for destructive steps, `slim.sh` to shrink finished reels, and `playwright-docker` to run
   Chromium in Docker where the host sandbox blocks it.
